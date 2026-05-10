@@ -1,0 +1,76 @@
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowLeft, Facebook, Instagram, Mail, MessageCircle } from "lucide-react";
+import QuietLoader from "../components/QuietLoader.jsx";
+import { loadBranding } from "../lib/branding.js";
+
+export default function Contact() {
+  const [branding, setBranding] = useState(null);
+
+  useEffect(() => {
+    loadBranding().then(setBranding);
+  }, []);
+
+  if (!branding) {
+    return (
+      <div className="min-h-screen bg-[#FAF9F6] text-[#2C2A29]">
+        <QuietLoader label="Cargando contacto" />
+      </div>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-[#FAF9F6] px-5 py-8 text-[#2C2A29] md:px-10">
+      <Link
+        to="/"
+        className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591] hover:text-[#2C2A29]"
+      >
+        <ArrowLeft size={15} strokeWidth={1.5} />
+        Volver al catalogo
+      </Link>
+
+      <section className="mx-auto mt-20 max-w-4xl">
+        <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">Contacto</p>
+        <h1 className="mt-5 font-serif text-5xl leading-tight md:text-7xl">
+          {branding.contact_heading}
+        </h1>
+
+        <div className="mt-12 grid gap-5 md:grid-cols-2">
+          <ContactLink icon={<MessageCircle size={22} strokeWidth={1.5} />} label="Whatsapp" value={branding.contact_whatsapp} href={`https://wa.me/${cleanPhone(branding.contact_whatsapp)}`} />
+          <ContactLink icon={<Mail size={22} strokeWidth={1.5} />} label="Mail" value={branding.contact_mail} href={`mailto:${branding.contact_mail}`} />
+        </div>
+
+        <div className="mt-16 border-t border-[#E5E2DE] pt-10">
+          <p className="font-serif text-3xl">{branding.social_heading}</p>
+          <div className="mt-6 flex flex-wrap gap-4">
+            <SocialLink icon={<Instagram size={18} strokeWidth={1.5} />} label="Instagram" href={branding.social_instagram} />
+            <SocialLink icon={<Facebook size={18} strokeWidth={1.5} />} label="Facebook" href={branding.social_facebook} />
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function ContactLink({ icon, label, value, href }) {
+  return (
+    <a href={href} target="_blank" rel="noreferrer" className="border border-[#E5E2DE] p-6 transition hover:border-[#2C2A29]">
+      <span className="text-[#2C2A29]">{icon}</span>
+      <span className="mt-6 block font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">{label}</span>
+      <span className="mt-3 block break-words font-serif text-2xl">{value}</span>
+    </a>
+  );
+}
+
+function SocialLink({ icon, label, href }) {
+  return (
+    <a href={href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-3 border border-[#2C2A29] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.2em] transition hover:bg-[#2C2A29] hover:text-[#FAF9F6]">
+      {icon}
+      {label}
+    </a>
+  );
+}
+
+function cleanPhone(value) {
+  return String(value ?? "").replace(/\D/g, "");
+}

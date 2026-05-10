@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #2C2A29;
+  background: #FAF9F6;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #FAF9F6;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.quiet-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.quiet-scrollbar::-webkit-scrollbar-thumb {
+  background: #D1CCC6;
+}
+
+.input {
+  width: 100%;
+  border: 1px solid #E5E2DE;
+  background: transparent;
+  padding: 0.85rem 1rem;
+  color: #2C2A29;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #2C2A29;
+}
