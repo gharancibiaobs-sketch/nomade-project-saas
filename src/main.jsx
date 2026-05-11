@@ -12,14 +12,14 @@ import "./styles.css";
 window.addEventListener("error", (event) => {
   const root = document.getElementById("root");
   if (root && root.childElementCount === 0) {
-    root.innerHTML = `<main style="min-height:100vh;background:#FAF9F6;color:#2C2A29;padding:48px;font-family:Georgia,serif"><h1>Nomade Project</h1><pre>${event.message}</pre></main>`;
+    root.innerHTML = `<main style="min-height:100vh;background:#FAF9F6;color:#252321;padding:48px;font-family:Georgia,serif"><h1>Nomade Project</h1><pre>${event.message}</pre></main>`;
   }
 });
 
 window.addEventListener("unhandledrejection", (event) => {
   const root = document.getElementById("root");
   if (root && root.childElementCount === 0) {
-    root.innerHTML = `<main style="min-height:100vh;background:#FAF9F6;color:#2C2A29;padding:48px;font-family:Georgia,serif"><h1>Nomade Project</h1><pre>${String(event.reason?.message ?? event.reason)}</pre></main>`;
+    root.innerHTML = `<main style="min-height:100vh;background:#FAF9F6;color:#252321;padding:48px;font-family:Georgia,serif"><h1>Nomade Project</h1><pre>${String(event.reason?.message ?? event.reason)}</pre></main>`;
   }
 });
 
@@ -42,10 +42,10 @@ try {
   );
 } catch (error) {
   document.getElementById("root").innerHTML = `
-    <main style="min-height:100vh;background:#FAF9F6;color:#2C2A29;padding:48px;font-family:Georgia,serif">
+    <main style="min-height:100vh;background:#FAF9F6;color:#252321;padding:48px;font-family:Georgia,serif">
       <h1 style="font-size:36px;font-weight:400">Nomade Project</h1>
       <p style="max-width:640px;line-height:1.7">La aplicacion no pudo iniciar en este navegador. Revisa la consola para ver el detalle tecnico.</p>
-      <pre style="white-space:pre-wrap;border:1px solid #E5E2DE;padding:16px;background:transparent">${String(
+      <pre style="white-space:pre-wrap;border:1px solid #CCC5BD;padding:16px;background:transparent">${String(
         error?.message ?? error
       )}</pre>
     </main>

@@ -98,8 +98,8 @@ export default function CheckoutPanel() {
   };
 
   return (
-    <section className="mt-10 border-t border-[#E5E2DE] pt-8">
-      <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+    <section className="mt-10 border-t border-[#CCC5BD] pt-8">
+      <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
         Confirmacion
       </p>
 
@@ -171,7 +171,7 @@ export default function CheckoutPanel() {
         />
       </div>
 
-      <div className="mt-7 space-y-3 border-t border-[#E5E2DE] pt-5 font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+      <div className="mt-7 space-y-3 border-t border-[#CCC5BD] pt-5 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
         <Line label="Subtotal" value={formatCurrency(totals.amount)} />
         <Line label="Envio" value={formatCurrency(shippingCost)} />
         <Line label="Total a pagar" value={formatCurrency(grandTotal)} strong />
@@ -181,7 +181,7 @@ export default function CheckoutPanel() {
         type="button"
         onClick={payOrder}
         disabled={!cart.length || isPaying}
-        className="mt-6 w-full border border-[#2C2A29] px-4 py-3 font-sans text-[9pt] uppercase tracking-[0.2em] transition hover:bg-[#2C2A29] hover:text-[#FAF9F6] disabled:cursor-not-allowed disabled:border-[#E5E2DE] disabled:text-[#999591]"
+        className="mt-6 w-full border border-[#252321] px-4 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6] disabled:cursor-not-allowed disabled:border-[#CCC5BD] disabled:text-[#6B655F]"
       >
         {isPaying ? "Procesando" : "Confirmar y pagar"}
       </button>
@@ -197,12 +197,12 @@ function ChoiceButton({ active, icon, label, detail, onClick }) {
       type="button"
       onClick={onClick}
       className={`flex items-center gap-3 border px-4 py-3 text-left transition ${
-        active ? "border-[#2C2A29]" : "border-[#E5E2DE] hover:border-[#B8B2AB]"
+        active ? "border-[#252321]" : "border-[#CCC5BD] hover:border-[#AFA79E]"
       }`}
     >
-      <span className="text-[#2C2A29]">{icon}</span>
+      <span className="text-[#252321]">{icon}</span>
       <span>
-        <span className="block font-sans text-[9pt] uppercase tracking-[0.2em] text-[#2C2A29]">
+        <span className="block font-sans text-[9pt] uppercase tracking-[0.16em] text-[#252321]">
           {label}
         </span>
         <span className="mt-1 block font-serif text-sm text-[#77716B]">{detail}</span>
@@ -215,7 +215,7 @@ function Line({ label, value, strong = false }) {
   return (
     <div className="flex items-center justify-between gap-4">
       <span>{label}</span>
-      <span className={strong ? "text-[#2C2A29]" : ""}>{value}</span>
+      <span className={strong ? "text-[#252321]" : ""}>{value}</span>
     </div>
   );
 }

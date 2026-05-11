@@ -5,9 +5,9 @@ export default {
     extend: {
       colors: {
         alabaster: "#FAF9F6",
-        charcoal: "#2C2A29",
-        stoneLine: "#E5E2DE",
-        quiet: "#999591"
+        charcoal: "#252321",
+        stoneLine: "#CCC5BD",
+        quiet: "#6B655F"
       },
       fontFamily: {
         serif: ["Lora", "Playfair Display", "Georgia", "serif"],

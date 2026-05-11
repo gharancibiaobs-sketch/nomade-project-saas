@@ -13,17 +13,17 @@ export default function About() {
 
   if (!branding) {
     return (
-      <div className="min-h-screen bg-[#FAF9F6] text-[#2C2A29]">
+      <div className="min-h-screen bg-[#FAF9F6] text-[#252321]">
         <QuietLoader label="Cargando historia" />
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#FAF9F6] px-5 py-8 text-[#2C2A29] md:px-10">
+    <main className="min-h-screen bg-[#FAF9F6] px-5 py-8 text-[#252321] md:px-10">
       <Link
         to="/"
-        className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591] hover:text-[#2C2A29]"
+        className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
       >
         <ArrowLeft size={15} strokeWidth={1.5} />
         Volver al catalogo
@@ -38,7 +38,7 @@ export default function About() {
           />
         </div>
         <div>
-          <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+          <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Acerca de Nomade
           </p>
           <h1 className="mt-5 font-serif text-5xl leading-tight md:text-7xl">

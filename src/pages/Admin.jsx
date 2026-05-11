@@ -437,7 +437,7 @@ export default function Admin() {
 
   if (!authReady || loading) {
     return (
-      <div className="min-h-screen bg-[#FAF9F6] text-[#2C2A29]">
+      <div className="min-h-screen bg-[#FAF9F6] text-[#252321]">
         <QuietLoader label="Abriendo backoffice" />
       </div>
     );
@@ -445,17 +445,17 @@ export default function Admin() {
 
   if (hasSupabaseConfig && !session) {
     return (
-      <div className="min-h-screen bg-[#FAF9F6] px-5 py-8 text-[#2C2A29] md:px-10">
+      <div className="min-h-screen bg-[#FAF9F6] px-5 py-8 text-[#252321] md:px-10">
         <Link
           to="/"
-          className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591] hover:text-[#2C2A29]"
+          className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
         >
           <ArrowLeft size={15} strokeWidth={1.5} />
           Catalogo
         </Link>
 
         <main className="mx-auto mt-20 max-w-md">
-          <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+          <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Acceso admin
           </p>
           <h1 className="mt-4 font-serif text-5xl">Backoffice Nomade</h1>
@@ -482,7 +482,7 @@ export default function Admin() {
             </Field>
             <button
               type="submit"
-              className="w-full border border-[#2C2A29] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.2em] transition hover:bg-[#2C2A29] hover:text-[#FAF9F6]"
+              className="w-full border border-[#252321] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
             >
               Entrar
             </button>
@@ -494,12 +494,12 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#2C2A29]">
-      <header className="border-b border-[#E5E2DE]">
+    <div className="min-h-screen bg-[#FAF9F6] text-[#252321]">
+      <header className="border-b border-[#CCC5BD]">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-6 md:px-8 lg:px-10">
           <Link
             to="/"
-            className="flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591] hover:text-[#2C2A29]"
+            className="flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
           >
             <ArrowLeft size={15} strokeWidth={1.5} />
             Catalogo
@@ -509,7 +509,7 @@ export default function Admin() {
             <button
               type="button"
               onClick={signOutAdmin}
-              className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591] hover:text-[#2C2A29]"
+              className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
             >
               <LogOut size={15} strokeWidth={1.5} />
               Salir
@@ -533,13 +533,13 @@ export default function Admin() {
           <div className="grid gap-8 lg:grid-cols-[240px_1fr_280px]">
             <div>
               <div className="mb-4 flex items-center justify-between gap-4">
-                <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+                <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
                   Productos
                 </p>
                 <button
                   type="button"
                   onClick={createProduct}
-                  className="inline-flex items-center gap-2 border border-[#2C2A29] px-3 py-2 font-sans text-[8pt] uppercase tracking-[0.2em] transition hover:bg-[#2C2A29] hover:text-[#FAF9F6]"
+                  className="inline-flex items-center gap-2 border border-[#252321] px-3 py-2 font-sans text-[8pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
                 >
                   <Plus size={13} strokeWidth={1.5} />
                   Nuevo
@@ -553,12 +553,12 @@ export default function Admin() {
                     onClick={() => setSelectedId(product.id)}
                     className={`w-full border px-4 py-3 text-left transition ${
                       selectedId === product.id
-                        ? "border-[#2C2A29]"
-                        : "border-[#E5E2DE] hover:border-[#B8B2AB]"
+                        ? "border-[#252321]"
+                        : "border-[#CCC5BD] hover:border-[#AFA79E]"
                     }`}
                   >
                     <span className="block font-serif text-lg">{product.nombre}</span>
-                    <span className="mt-1 block font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+                    <span className="mt-1 block font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
                       {formatCurrency(effectivePrice(product))}
                     </span>
                   </button>
@@ -632,22 +632,22 @@ export default function Admin() {
 
               <button
                 type="submit"
-                className="inline-flex items-center gap-3 border border-[#2C2A29] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.2em] transition hover:bg-[#2C2A29] hover:text-[#FAF9F6]"
+                className="inline-flex items-center gap-3 border border-[#252321] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
               >
                 <Save size={15} strokeWidth={1.5} />
                 Guardar producto
               </button>
             </form>
             ) : (
-              <div className="border border-[#E5E2DE] p-8">
+              <div className="border border-[#CCC5BD] p-8">
                 <p className="font-serif text-xl leading-8 text-[#5F5A55]">
                   Crea un producto nuevo para habilitar el editor.
                 </p>
               </div>
             )}
 
-            <section className="border-l border-[#E5E2DE] pl-6">
-              <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+            <section className="border-l border-[#CCC5BD] pl-6">
+              <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
                 Medios de producto
               </p>
               <div className="mt-5 overflow-hidden bg-[#F0EEE9]">
@@ -658,10 +658,10 @@ export default function Admin() {
                     className="aspect-[4/5] w-full object-cover"
                   />
                 ) : (
-                  <div className="aspect-[4/5] w-full border border-[#E5E2DE]" />
+                  <div className="aspect-[4/5] w-full border border-[#CCC5BD]" />
                 )}
               </div>
-              <label className="mt-5 flex cursor-pointer items-center justify-center gap-3 border border-[#E5E2DE] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.2em] transition hover:border-[#2C2A29]">
+              <label className="mt-5 flex cursor-pointer items-center justify-center gap-3 border border-[#CCC5BD] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:border-[#252321]">
                 <ImageUp size={15} strokeWidth={1.5} />
                 Subir imagen
                 <input type="file" accept="image/*" onChange={uploadProductImage} className="hidden" />
@@ -670,12 +670,12 @@ export default function Admin() {
           </div>
         </section>
 
-        <aside className="space-y-8 border-l border-[#E5E2DE] pl-8">
+        <aside className="space-y-8 border-l border-[#CCC5BD] pl-8">
           <section>
-            <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+            <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
               Branding
             </p>
-            <div className="mt-5 flex min-h-24 items-center justify-center border border-[#E5E2DE] p-6">
+            <div className="mt-5 flex min-h-24 items-center justify-center border border-[#CCC5BD] p-6">
               {logoUrl ? (
                 <img
                   src={logoUrl}
@@ -686,13 +686,13 @@ export default function Admin() {
                 <span className="font-serif text-2xl">Nomade Project</span>
               )}
             </div>
-            <label className="mt-5 flex cursor-pointer items-center justify-center gap-3 border border-[#E5E2DE] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.2em] transition hover:border-[#2C2A29]">
+            <label className="mt-5 flex cursor-pointer items-center justify-center gap-3 border border-[#CCC5BD] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:border-[#252321]">
               <Upload size={15} strokeWidth={1.5} />
               Cambiar logo
               <input type="file" accept="image/*" onChange={uploadLogo} className="hidden" />
             </label>
 
-            <form onSubmit={saveBrandingForm} className="mt-8 space-y-4 border-t border-[#E5E2DE] pt-8">
+            <form onSubmit={saveBrandingForm} className="mt-8 space-y-4 border-t border-[#CCC5BD] pt-8">
               <Field label="Texto contacto">
                 <input
                   name="contact_heading"
@@ -766,14 +766,14 @@ export default function Admin() {
                   className="input"
                 />
               </Field>
-              <label className="flex cursor-pointer items-center justify-center gap-3 border border-[#E5E2DE] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.2em] transition hover:border-[#2C2A29]">
+              <label className="flex cursor-pointer items-center justify-center gap-3 border border-[#CCC5BD] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:border-[#252321]">
                 <ImageUp size={15} strokeWidth={1.5} />
                 Subir imagen acerca
                 <input type="file" accept="image/*" onChange={uploadAboutImage} className="hidden" />
               </label>
               <button
                 type="submit"
-                className="inline-flex w-full items-center justify-center gap-3 border border-[#2C2A29] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.2em] transition hover:bg-[#2C2A29] hover:text-[#FAF9F6]"
+                className="inline-flex w-full items-center justify-center gap-3 border border-[#252321] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
               >
                 <Save size={15} strokeWidth={1.5} />
                 Guardar branding
@@ -782,7 +782,7 @@ export default function Admin() {
           </section>
 
           {status && (
-            <p className="animate-fadeIn border-t border-[#E5E2DE] pt-6 font-serif text-lg leading-7 text-[#5F5A55]">
+            <p className="animate-fadeIn border-t border-[#CCC5BD] pt-6 font-serif text-lg leading-7 text-[#5F5A55]">
               {status}
             </p>
           )}
@@ -897,16 +897,16 @@ function generateSalesPdf(dashboard) {
         <title>Reporte de ventas Nomade</title>
         <style>
           @page { margin: 22mm; }
-          body { color: #2C2A29; font-family: Arial, sans-serif; background: #FAF9F6; }
+          body { color: #252321; font-family: Arial, sans-serif; background: #FAF9F6; }
           h1, h2 { font-family: Georgia, serif; font-weight: 400; }
           h1 { font-size: 34px; margin: 0 0 8px; }
           h2 { font-size: 22px; margin: 28px 0 12px; }
           p, th { color: #77716B; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; }
           table { width: 100%; border-collapse: collapse; margin-top: 12px; background: transparent; }
-          th, td { border-bottom: 1px solid #E5E2DE; padding: 10px 8px; text-align: left; font-size: 12px; }
+          th, td { border-bottom: 1px solid #CCC5BD; padding: 10px 8px; text-align: left; font-size: 12px; }
           .number { text-align: right; }
           .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 26px; }
-          .metric { border: 1px solid #E5E2DE; padding: 14px; }
+          .metric { border: 1px solid #CCC5BD; padding: 14px; }
           .metric strong { display: block; margin-top: 8px; font-family: Georgia, serif; font-size: 22px; font-weight: 400; }
           @media print { body { background: white; } }
         </style>
@@ -951,15 +951,15 @@ function escapeHtml(value) {
 
 function SalesDashboard({ dashboard }) {
   return (
-    <section className="border-b border-[#E5E2DE] pb-8">
+    <section className="border-b border-[#CCC5BD] pb-8">
       <div className="mb-6 flex items-center justify-between gap-5">
         <div>
-          <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+          <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Dashboard de ventas
           </p>
           <h2 className="mt-3 font-serif text-4xl">Integridad financiera</h2>
         </div>
-        <TrendingUp size={22} strokeWidth={1.4} className="text-[#999591]" />
+        <TrendingUp size={22} strokeWidth={1.4} className="text-[#6B655F]" />
       </div>
 
       <div className="grid gap-5 md:grid-cols-4">
@@ -971,7 +971,7 @@ function SalesDashboard({ dashboard }) {
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
         <div>
-          <p className="mb-4 font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+          <p className="mb-4 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Rendimiento por categoria
           </p>
           <div className="space-y-4">
@@ -984,13 +984,13 @@ function SalesDashboard({ dashboard }) {
                 <div key={row.name}>
                   <div className="mb-2 flex items-center justify-between gap-4">
                     <span className="font-serif text-lg">{row.name}</span>
-                    <span className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+                    <span className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
                       {formatCurrency(row.revenue)} / {row.units} uds.
                     </span>
                   </div>
-                  <div className="h-2 bg-[#E5E2DE]">
+                  <div className="h-2 bg-[#CCC5BD]">
                     <div
-                      className="h-full bg-[#2C2A29]"
+                      className="h-full bg-[#252321]"
                       style={{ width: `${Math.max(row.share * 100, 4)}%` }}
                     />
                   </div>
@@ -1000,8 +1000,8 @@ function SalesDashboard({ dashboard }) {
           </div>
         </div>
 
-        <div className="border-l border-[#E5E2DE] pl-6">
-          <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+        <div className="border-l border-[#CCC5BD] pl-6">
+          <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Auditoria operativa
           </p>
           <div className="mt-5 space-y-5">
@@ -1017,10 +1017,10 @@ function SalesDashboard({ dashboard }) {
 
 function SalesReport({ dashboard }) {
   return (
-    <section className="border-b border-[#E5E2DE] pb-8">
+    <section className="border-b border-[#CCC5BD] pb-8">
       <div className="mb-6 flex flex-col justify-between gap-5 md:flex-row md:items-end">
         <div>
-          <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+          <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Reporte exportable
           </p>
           <h2 className="mt-3 font-serif text-3xl">Ventas por producto</h2>
@@ -1028,7 +1028,7 @@ function SalesReport({ dashboard }) {
         <button
           type="button"
           onClick={() => generateSalesPdf(dashboard)}
-          className="inline-flex items-center justify-center gap-3 border border-[#2C2A29] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.2em] transition hover:bg-[#2C2A29] hover:text-[#FAF9F6]"
+          className="inline-flex items-center justify-center gap-3 border border-[#252321] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
         >
           <FileText size={15} strokeWidth={1.5} />
           Generar PDF
@@ -1038,17 +1038,17 @@ function SalesReport({ dashboard }) {
       <div className="overflow-x-auto">
         <table className="w-full min-w-[680px] border-collapse">
           <thead>
-            <tr className="border-b border-[#E5E2DE]">
-              <th className="py-3 pr-4 text-left font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+            <tr className="border-b border-[#CCC5BD]">
+              <th className="py-3 pr-4 text-left font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
                 Categoria
               </th>
-              <th className="py-3 pr-4 text-left font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+              <th className="py-3 pr-4 text-left font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
                 Producto
               </th>
-              <th className="py-3 pr-4 text-right font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+              <th className="py-3 pr-4 text-right font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
                 Unidades
               </th>
-              <th className="py-3 text-right font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+              <th className="py-3 text-right font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
                 Ventas
               </th>
             </tr>
@@ -1062,13 +1062,13 @@ function SalesReport({ dashboard }) {
               </tr>
             ) : (
               dashboard.productRows.map((row) => (
-                <tr key={`${row.categoryName}-${row.id}`} className="border-b border-[#E5E2DE]">
+                <tr key={`${row.categoryName}-${row.id}`} className="border-b border-[#CCC5BD]">
                   <td className="py-4 pr-4 font-serif text-base">{row.categoryName}</td>
                   <td className="py-4 pr-4 font-serif text-base">{row.name}</td>
-                  <td className="py-4 pr-4 text-right font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+                  <td className="py-4 pr-4 text-right font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
                     {row.units}
                   </td>
-                  <td className="py-4 text-right font-sans text-[9pt] uppercase tracking-[0.2em] text-[#2C2A29]">
+                  <td className="py-4 text-right font-sans text-[9pt] uppercase tracking-[0.16em] text-[#252321]">
                     {formatCurrency(row.revenue)}
                   </td>
                 </tr>
@@ -1080,14 +1080,14 @@ function SalesReport({ dashboard }) {
 
       <div className="mt-7 grid gap-4 md:grid-cols-3">
         {dashboard.categoryRows.map((row) => (
-          <div key={row.name} className="border border-[#E5E2DE] p-4">
-            <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+          <div key={row.name} className="border border-[#CCC5BD] p-4">
+            <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
               Subtotal categoria
             </p>
             <p className="mt-3 font-serif text-2xl">{row.name}</p>
-            <div className="mt-4 flex items-center justify-between gap-4 font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+            <div className="mt-4 flex items-center justify-between gap-4 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
               <span>{row.units} uds.</span>
-              <span className="text-[#2C2A29]">{formatCurrency(row.revenue)}</span>
+              <span className="text-[#252321]">{formatCurrency(row.revenue)}</span>
             </div>
           </div>
         ))}
@@ -1110,9 +1110,9 @@ function CategoryManager({
   }, [categorias]);
 
   return (
-    <section className="border-b border-[#E5E2DE] pb-8">
+    <section className="border-b border-[#CCC5BD] pb-8">
       <div className="mb-6">
-        <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+        <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
           Maestro de categorias
         </p>
         <h2 className="mt-3 font-serif text-3xl">Lista y validacion</h2>
@@ -1127,7 +1127,7 @@ function CategoryManager({
         />
         <button
           type="submit"
-          className="border border-[#2C2A29] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.2em] transition hover:bg-[#2C2A29] hover:text-[#FAF9F6]"
+          className="border border-[#252321] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
         >
           Agregar categoria
         </button>
@@ -1135,8 +1135,8 @@ function CategoryManager({
 
       <div className="grid gap-3 md:grid-cols-2">
         {categorias.map((cat) => (
-          <div key={cat.id} className="flex gap-3 border border-[#E5E2DE] p-3">
-            <div className="flex h-11 w-12 shrink-0 items-center justify-center border border-[#E5E2DE] font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+          <div key={cat.id} className="flex gap-3 border border-[#CCC5BD] p-3">
+            <div className="flex h-11 w-12 shrink-0 items-center justify-center border border-[#CCC5BD] font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
               {cat.id}
             </div>
             <input
@@ -1149,7 +1149,7 @@ function CategoryManager({
             <button
               type="button"
               onClick={() => onRenameCategory(cat.id, drafts[cat.id] ?? cat.nombre)}
-              className="border border-[#E5E2DE] px-4 font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591] transition hover:border-[#2C2A29] hover:text-[#2C2A29]"
+              className="border border-[#CCC5BD] px-4 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] transition hover:border-[#252321] hover:text-[#252321]"
             >
               Guardar
             </button>
@@ -1162,8 +1162,8 @@ function CategoryManager({
 
 function AuditLine({ label, value }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-[#E5E2DE] pb-3">
-      <span className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">{label}</span>
+    <div className="flex items-center justify-between gap-4 border-b border-[#CCC5BD] pb-3">
+      <span className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">{label}</span>
       <span className="font-serif text-2xl">{value}</span>
     </div>
   );
@@ -1181,7 +1181,7 @@ function normalizeImages(value) {
 function Metric({ label, value }) {
   return (
     <div>
-      <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">{label}</p>
+      <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">{label}</p>
       <p className="mt-3 font-serif text-3xl">{value}</p>
     </div>
   );
@@ -1190,7 +1190,7 @@ function Metric({ label, value }) {
 function Field({ label, children }) {
   return (
     <label className="block">
-      <span className="mb-2 block font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+      <span className="mb-2 block font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
         {label}
       </span>
       {children}

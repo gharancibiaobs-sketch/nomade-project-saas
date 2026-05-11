@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  color: #2C2A29;
+  color: #252321;
   background: #FAF9F6;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -35,13 +35,13 @@ select {
 
 .input {
   width: 100%;
-  border: 1px solid #E5E2DE;
+  border: 1px solid #CCC5BD;
   background: transparent;
   padding: 0.85rem 1rem;
-  color: #2C2A29;
+  color: #252321;
   outline: none;
 }
 
 .input:focus {
-  border-color: #2C2A29;
+  border-color: #252321;
 }

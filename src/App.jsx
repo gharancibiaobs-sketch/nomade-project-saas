@@ -78,16 +78,16 @@ export default function App() {
   }, [categoriaActiva, categorias]);
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] text-[#2C2A29]">
+    <div className="min-h-screen bg-[#FAF9F6] text-[#252321]">
       <Navbar categorias={categorias} logoUrl={logoUrl} />
 
       <main className="mx-auto grid max-w-7xl gap-14 px-5 py-12 md:px-8 lg:grid-cols-[1fr_320px] lg:px-10 lg:py-16">
         <section>
           <div className="mb-12 max-w-3xl animate-fadeIn">
-            <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+            <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
               Catalogo B2B curado
             </p>
-            <h1 className="mt-5 font-serif text-5xl leading-[1.05] text-[#2C2A29] md:text-7xl">
+            <h1 className="mt-5 font-serif text-5xl leading-[1.05] text-[#252321] md:text-7xl">
               {activeCategoryName}
             </h1>
             <p className="mt-7 max-w-2xl font-serif text-xl leading-9 text-[#5F5A55]">
@@ -105,8 +105,8 @@ export default function App() {
           )}
         </section>
 
-        <aside className="h-fit border-l border-[#E5E2DE] pl-8 lg:sticky lg:top-40">
-          <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+        <aside className="h-fit border-l border-[#CCC5BD] pl-8 lg:sticky lg:top-40">
+          <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Pedido en curso
           </p>
           <div className="mt-6 space-y-5">
@@ -116,15 +116,15 @@ export default function App() {
               </p>
             ) : (
               cart.map((item) => (
-                <div key={item.id} className="border-b border-[#E5E2DE] pb-4">
+                <div key={item.id} className="border-b border-[#CCC5BD] pb-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <p className="font-serif text-lg">{item.nombre}</p>
-                      <div className="mt-3 flex w-fit items-center border border-[#E5E2DE]">
+                      <div className="mt-3 flex w-fit items-center border border-[#CCC5BD]">
                         <button
                           type="button"
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="flex h-8 w-8 items-center justify-center font-sans text-sm text-[#999591] transition hover:text-[#2C2A29]"
+                          className="flex h-8 w-8 items-center justify-center font-sans text-sm text-[#6B655F] transition hover:text-[#252321]"
                           aria-label={`Restar ${item.nombre}`}
                         >
                           -
@@ -134,13 +134,13 @@ export default function App() {
                           min="1"
                           value={item.quantity}
                           onChange={(event) => updateQuantity(item.id, event.target.value)}
-                          className="h-8 w-12 border-x border-[#E5E2DE] bg-transparent text-center font-sans text-[9pt] text-[#2C2A29] outline-none"
+                          className="h-8 w-12 border-x border-[#CCC5BD] bg-transparent text-center font-sans text-[9pt] text-[#252321] outline-none"
                           aria-label={`Cantidad de ${item.nombre}`}
                         />
                         <button
                           type="button"
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="flex h-8 w-8 items-center justify-center font-sans text-sm text-[#999591] transition hover:text-[#2C2A29]"
+                          className="flex h-8 w-8 items-center justify-center font-sans text-sm text-[#6B655F] transition hover:text-[#252321]"
                           aria-label={`Sumar ${item.nombre}`}
                         >
                           +
@@ -150,7 +150,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => removeFromCart(item.id)}
-                      className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591] hover:text-[#2C2A29]"
+                      className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
                     >
                       Quitar
                     </button>
@@ -159,8 +159,8 @@ export default function App() {
               ))
             )}
           </div>
-          <div className="mt-8 flex items-center justify-between border-t border-[#E5E2DE] pt-5">
-            <span className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+          <div className="mt-8 flex items-center justify-between border-t border-[#CCC5BD] pt-5">
+            <span className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
               Total
             </span>
             <span className="font-serif text-2xl">{formatCurrency(totals.amount)}</span>
@@ -171,7 +171,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={clearCart}
-                className="mt-5 w-full border border-[#E5E2DE] px-4 py-3 font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591] transition hover:border-[#2C2A29] hover:text-[#2C2A29]"
+                className="mt-5 w-full border border-[#CCC5BD] px-4 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] transition hover:border-[#252321] hover:text-[#252321]"
               >
                 Vaciar orden
               </button>
