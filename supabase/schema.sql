@@ -121,6 +121,7 @@ on public.pedidos for insert
 with check (true);
 
 drop policy if exists "Admins can write orders" on public.pedidos;
+drop policy if exists "Admins can update orders" on public.pedidos;
 create policy "Admins can update orders"
 on public.pedidos for update
 using (public.is_admin())
