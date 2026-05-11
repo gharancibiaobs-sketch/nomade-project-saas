@@ -530,7 +530,7 @@ export default function Admin() {
             onRenameCategory={renameCategory}
           />
 
-          <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
+          <div className="grid gap-8 lg:grid-cols-[240px_1fr_280px]">
             <div>
               <div className="mb-4 flex items-center justify-between gap-4">
                 <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
@@ -645,31 +645,33 @@ export default function Admin() {
                 </p>
               </div>
             )}
+
+            <section className="border-l border-[#E5E2DE] pl-6">
+              <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+                Medios de producto
+              </p>
+              <div className="mt-5 overflow-hidden bg-[#F0EEE9]">
+                {selectedProduct ? (
+                  <img
+                    src={firstImage(selectedProduct)}
+                    alt={selectedProduct.nombre}
+                    className="aspect-[4/5] w-full object-cover"
+                  />
+                ) : (
+                  <div className="aspect-[4/5] w-full border border-[#E5E2DE]" />
+                )}
+              </div>
+              <label className="mt-5 flex cursor-pointer items-center justify-center gap-3 border border-[#E5E2DE] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.2em] transition hover:border-[#2C2A29]">
+                <ImageUp size={15} strokeWidth={1.5} />
+                Subir imagen
+                <input type="file" accept="image/*" onChange={uploadProductImage} className="hidden" />
+              </label>
+            </section>
           </div>
         </section>
 
         <aside className="space-y-8 border-l border-[#E5E2DE] pl-8">
           <section>
-            <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
-              Medios de producto
-            </p>
-            <div className="mt-5 overflow-hidden bg-[#F0EEE9]">
-              {selectedProduct && (
-                <img
-                  src={firstImage(selectedProduct)}
-                  alt={selectedProduct.nombre}
-                  className="aspect-[4/5] w-full object-cover"
-                />
-              )}
-            </div>
-            <label className="mt-5 flex cursor-pointer items-center justify-center gap-3 border border-[#E5E2DE] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.2em] transition hover:border-[#2C2A29]">
-              <ImageUp size={15} strokeWidth={1.5} />
-              Subir imagen
-              <input type="file" accept="image/*" onChange={uploadProductImage} className="hidden" />
-            </label>
-          </section>
-
-          <section className="border-t border-[#E5E2DE] pt-8">
             <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
               Branding
             </p>
