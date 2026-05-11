@@ -56,13 +56,15 @@ create or replace function public.is_admin()
 returns boolean
 language sql
 stable
+security definer
+set search_path = public
 as $$
   select
     coalesce((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin', false)
     or exists (
       select 1
       from public.admin_users
-      where lower(email) = lower(auth.email())
+      where lower(admin_users.email) = lower(auth.email())
     );
 $$;
 
@@ -75,7 +77,10 @@ alter table public.admin_users enable row level security;
 drop policy if exists "Admins can read admin users" on public.admin_users;
 create policy "Admins can read admin users"
 on public.admin_users for select
-using (public.is_admin());
+using (
+  lower(email) = lower(auth.email())
+  or coalesce((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin', false)
+);
 
 drop policy if exists "Public can read categories" on public.categorias;
 create policy "Public can read categories"
