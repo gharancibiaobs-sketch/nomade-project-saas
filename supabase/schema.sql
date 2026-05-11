@@ -21,6 +21,11 @@ create table if not exists public.configuracion_sitio (
   valor text not null
 );
 
+create table if not exists public.admin_users (
+  email text primary key,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists public.pedidos (
   id uuid primary key default gen_random_uuid(),
   total numeric(12, 2) not null check (total >= 0),
@@ -52,13 +57,25 @@ returns boolean
 language sql
 stable
 as $$
-  select coalesce((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin', false);
+  select
+    coalesce((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin', false)
+    or exists (
+      select 1
+      from public.admin_users
+      where lower(email) = lower(auth.email())
+    );
 $$;
 
 alter table public.categorias enable row level security;
 alter table public.productos enable row level security;
 alter table public.configuracion_sitio enable row level security;
 alter table public.pedidos enable row level security;
+alter table public.admin_users enable row level security;
+
+drop policy if exists "Admins can read admin users" on public.admin_users;
+create policy "Admins can read admin users"
+on public.admin_users for select
+using (public.is_admin());
 
 drop policy if exists "Public can read categories" on public.categorias;
 create policy "Public can read categories"
@@ -134,3 +151,24 @@ insert into storage.buckets (id, name, public)
 values ('imagenes-productos', 'imagenes-productos', true),
        ('branding', 'branding', true)
 on conflict (id) do update set public = excluded.public;
+
+drop policy if exists "Public can read product images" on storage.objects;
+create policy "Public can read product images"
+on storage.objects for select
+using (bucket_id in ('imagenes-productos', 'branding'));
+
+drop policy if exists "Admins can upload product images" on storage.objects;
+create policy "Admins can upload product images"
+on storage.objects for insert
+with check (bucket_id in ('imagenes-productos', 'branding') and public.is_admin());
+
+drop policy if exists "Admins can update product images" on storage.objects;
+create policy "Admins can update product images"
+on storage.objects for update
+using (bucket_id in ('imagenes-productos', 'branding') and public.is_admin())
+with check (bucket_id in ('imagenes-productos', 'branding') and public.is_admin());
+
+drop policy if exists "Admins can delete product images" on storage.objects;
+create policy "Admins can delete product images"
+on storage.objects for delete
+using (bucket_id in ('imagenes-productos', 'branding') and public.is_admin());

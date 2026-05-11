@@ -1,7 +1,7 @@
 import React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, FileText, ImageUp, Save, TrendingUp, Upload } from "lucide-react";
+import { ArrowLeft, FileText, ImageUp, LogOut, Plus, Save, TrendingUp, Upload } from "lucide-react";
 import QuietLoader from "../components/QuietLoader.jsx";
 import { loadBranding, saveBranding } from "../lib/branding.js";
 import {
@@ -39,6 +39,9 @@ const emptyBranding = {
 };
 
 export default function Admin() {
+  const [session, setSession] = useState(null);
+  const [authReady, setAuthReady] = useState(!hasSupabaseConfig);
+  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [categorias, setCategorias] = useState([]);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [productos, setProductos] = useState([]);
@@ -56,8 +59,31 @@ export default function Admin() {
   );
 
   useEffect(() => {
+    if (!hasSupabaseConfig) return;
+
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setAuthReady(true);
+    });
+
+    const {
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      setAuthReady(true);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
     async function loadAdmin() {
       setLoading(true);
+      if (hasSupabaseConfig && !session) {
+        setLoading(false);
+        return;
+      }
+
       if (!hasSupabaseConfig) {
         const demoProductos = readDemoProducts();
         const branding = await loadBranding();
@@ -100,8 +126,8 @@ export default function Admin() {
       setLoading(false);
     }
 
-    loadAdmin();
-  }, []);
+    if (authReady) loadAdmin();
+  }, [authReady, session]);
 
   useEffect(() => {
     if (!selectedProduct) {
@@ -122,6 +148,28 @@ export default function Admin() {
   const updateForm = (event) => {
     const { name, value } = event.target;
     setForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const updateLoginForm = (event) => {
+    const { name, value } = event.target;
+    setLoginForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const signInAdmin = async (event) => {
+    event.preventDefault();
+    setStatus("");
+    const { error } = await supabase.auth.signInWithPassword({
+      email: loginForm.email,
+      password: loginForm.password
+    });
+    if (error) setStatus(error.message);
+  };
+
+  const signOutAdmin = async () => {
+    await supabase.auth.signOut();
+    setProductos([]);
+    setCategorias([]);
+    setSelectedId("");
   };
 
   const updateBrandingForm = (event) => {
@@ -245,6 +293,43 @@ export default function Admin() {
     setStatus(error ? error.message : "Producto actualizado.");
   };
 
+  const createProduct = async () => {
+    const firstCategory = categorias[0];
+    if (!firstCategory) {
+      setStatus("Primero crea una categoria en el maestro de categorias.");
+      return;
+    }
+
+    const payload = {
+      nombre: "Nuevo producto",
+      descripcion: "Descripcion tecnica del producto.",
+      precio_original: 0,
+      precio_oferta: null,
+      stock_quantity: 0,
+      categoria_id: Number(firstCategory.id),
+      imagenes: []
+    };
+
+    if (!hasSupabaseConfig) {
+      const product = { ...payload, id: crypto.randomUUID() };
+      const nextProducts = [product, ...productos];
+      setProductos(nextProducts);
+      writeDemoProducts(nextProducts);
+      setSelectedId(product.id);
+      setStatus("Producto creado en modo demo.");
+      return;
+    }
+
+    const { data, error } = await supabase.from("productos").insert(payload).select("*").single();
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
+    setProductos((current) => [data, ...current]);
+    setSelectedId(data.id);
+    setStatus("Producto creado.");
+  };
+
   const uploadProductImage = async (event) => {
     const file = event.target.files?.[0];
     if (!file || !selectedProduct) return;
@@ -350,10 +435,60 @@ export default function Admin() {
     setStatus(error ? error.message : "Imagen de Acerca de Nomade actualizada.");
   };
 
-  if (loading) {
+  if (!authReady || loading) {
     return (
       <div className="min-h-screen bg-[#FAF9F6] text-[#2C2A29]">
         <QuietLoader label="Abriendo backoffice" />
+      </div>
+    );
+  }
+
+  if (hasSupabaseConfig && !session) {
+    return (
+      <div className="min-h-screen bg-[#FAF9F6] px-5 py-8 text-[#2C2A29] md:px-10">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591] hover:text-[#2C2A29]"
+        >
+          <ArrowLeft size={15} strokeWidth={1.5} />
+          Catalogo
+        </Link>
+
+        <main className="mx-auto mt-20 max-w-md">
+          <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+            Acceso admin
+          </p>
+          <h1 className="mt-4 font-serif text-5xl">Backoffice Nomade</h1>
+          <form onSubmit={signInAdmin} className="mt-8 space-y-4">
+            <Field label="Email">
+              <input
+                name="email"
+                type="email"
+                value={loginForm.email}
+                onChange={updateLoginForm}
+                className="input"
+                required
+              />
+            </Field>
+            <Field label="Password">
+              <input
+                name="password"
+                type="password"
+                value={loginForm.password}
+                onChange={updateLoginForm}
+                className="input"
+                required
+              />
+            </Field>
+            <button
+              type="submit"
+              className="w-full border border-[#2C2A29] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.2em] transition hover:bg-[#2C2A29] hover:text-[#FAF9F6]"
+            >
+              Entrar
+            </button>
+          </form>
+          {status && <p className="mt-6 font-serif text-lg leading-7 text-[#5F5A55]">{status}</p>}
+        </main>
       </div>
     );
   }
@@ -370,6 +505,16 @@ export default function Admin() {
             Catalogo
           </Link>
           <h1 className="font-serif text-3xl">Backoffice Nomade</h1>
+          {hasSupabaseConfig && (
+            <button
+              type="button"
+              onClick={signOutAdmin}
+              className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591] hover:text-[#2C2A29]"
+            >
+              <LogOut size={15} strokeWidth={1.5} />
+              Salir
+            </button>
+          )}
         </div>
       </header>
 
@@ -387,9 +532,19 @@ export default function Admin() {
 
           <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
             <div>
-              <p className="mb-4 font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
-                Productos
-              </p>
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <p className="font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
+                  Productos
+                </p>
+                <button
+                  type="button"
+                  onClick={createProduct}
+                  className="inline-flex items-center gap-2 border border-[#2C2A29] px-3 py-2 font-sans text-[8pt] uppercase tracking-[0.2em] transition hover:bg-[#2C2A29] hover:text-[#FAF9F6]"
+                >
+                  <Plus size={13} strokeWidth={1.5} />
+                  Nuevo
+                </button>
+              </div>
               <div className="quiet-scrollbar max-h-[560px] space-y-2 overflow-auto pr-2">
                 {productos.map((product) => (
                   <button
@@ -411,6 +566,7 @@ export default function Admin() {
               </div>
             </div>
 
+            {selectedProduct ? (
             <form onSubmit={saveProduct} className="animate-fadeIn space-y-6">
               <div className="grid gap-5 md:grid-cols-2">
                 <Field label="Nombre">
@@ -482,6 +638,13 @@ export default function Admin() {
                 Guardar producto
               </button>
             </form>
+            ) : (
+              <div className="border border-[#E5E2DE] p-8">
+                <p className="font-serif text-xl leading-8 text-[#5F5A55]">
+                  Crea un producto nuevo para habilitar el editor.
+                </p>
+              </div>
+            )}
           </div>
         </section>
 
