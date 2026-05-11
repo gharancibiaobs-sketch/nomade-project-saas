@@ -15,7 +15,7 @@ import {
   writeDemoProducts
 } from "../lib/demoStore.js";
 import { hasSupabaseConfig, supabase } from "../lib/supabase.js";
-import { formatCurrency, firstImage } from "../utils/format.js";
+import { effectivePrice, formatCurrency, firstImage } from "../utils/format.js";
 
 const emptyForm = {
   nombre: "",
@@ -559,7 +559,7 @@ export default function Admin() {
                   >
                     <span className="block font-serif text-lg">{product.nombre}</span>
                     <span className="mt-1 block font-sans text-[9pt] uppercase tracking-[0.2em] text-[#999591]">
-                      {formatCurrency(product.precio_oferta ?? product.precio_original)}
+                      {formatCurrency(effectivePrice(product))}
                     </span>
                   </button>
                 ))}

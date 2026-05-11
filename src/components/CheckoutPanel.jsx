@@ -3,7 +3,7 @@ import { CreditCard, MapPin, PackageCheck, Truck } from "lucide-react";
 import { useCart } from "../context/CartContext.jsx";
 import { appendDemoOrder } from "../lib/demoStore.js";
 import { hasSupabaseConfig, supabase } from "../lib/supabase.js";
-import { formatCurrency } from "../utils/format.js";
+import { effectivePrice, formatCurrency } from "../utils/format.js";
 
 const SHIPPING_COST = 18;
 
@@ -33,7 +33,7 @@ export default function CheckoutPanel() {
         nombre: item.nombre,
         categoria_id: item.categoria_id,
         quantity: item.quantity,
-        unit_price: Number(item.precio_oferta ?? item.precio_original)
+        unit_price: effectivePrice(item)
       })),
     [cart]
   );

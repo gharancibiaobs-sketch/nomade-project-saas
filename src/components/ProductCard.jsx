@@ -1,14 +1,14 @@
 import React from "react";
 import { ShoppingBag } from "lucide-react";
 import { useCart } from "../context/CartContext.jsx";
-import { formatCurrency, firstImage } from "../utils/format.js";
+import { effectivePrice, formatCurrency, firstImage, hasValidOffer } from "../utils/format.js";
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
   const image = firstImage(product);
   const originalPrice = Number(product.precio_original ?? 0);
-  const offerPrice = Number(product.precio_oferta ?? 0);
-  const hasOffer = offerPrice > 0 && offerPrice < originalPrice;
+  const offerPrice = effectivePrice(product);
+  const hasOffer = hasValidOffer(product);
 
   return (
     <article className="group flex flex-col gap-5 bg-transparent">

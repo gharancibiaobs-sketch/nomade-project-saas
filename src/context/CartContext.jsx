@@ -1,5 +1,6 @@
 import React from "react";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { effectivePrice } from "../utils/format.js";
 
 const CartContext = createContext(null);
 const CART_KEY = "nomade-cart";
@@ -61,7 +62,7 @@ export function CartProvider({ children }) {
   const totals = useMemo(() => {
     return cart.reduce(
       (acc, item) => {
-        const unitPrice = Number(item.precio_oferta ?? item.precio_original);
+        const unitPrice = effectivePrice(item);
         acc.items += item.quantity;
         acc.amount += unitPrice * item.quantity;
         return acc;

@@ -6,6 +6,18 @@ export function formatCurrency(value) {
   }).format(Number(value ?? 0));
 }
 
+export function effectivePrice(product) {
+  const originalPrice = Number(product?.precio_original ?? product?.unit_price ?? 0);
+  const offerPrice = Number(product?.precio_oferta ?? 0);
+  return offerPrice > 0 && offerPrice < originalPrice ? offerPrice : originalPrice;
+}
+
+export function hasValidOffer(product) {
+  const originalPrice = Number(product?.precio_original ?? 0);
+  const offerPrice = Number(product?.precio_oferta ?? 0);
+  return offerPrice > 0 && offerPrice < originalPrice;
+}
+
 export function firstImage(product) {
   if (Array.isArray(product.imagenes)) {
     return product.imagenes[0];
