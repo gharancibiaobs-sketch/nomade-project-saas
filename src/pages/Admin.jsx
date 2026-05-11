@@ -518,8 +518,9 @@ export default function Admin() {
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-7xl gap-10 px-5 py-10 md:px-8 lg:grid-cols-[1.5fr_0.8fr] lg:px-10">
-        <section className="space-y-8">
+      <main className="mx-auto max-w-7xl space-y-12 px-5 py-10 md:px-8 lg:px-10">
+        <div className="grid gap-10 lg:grid-cols-[1.5fr_0.8fr]">
+          <section className="space-y-8">
           <SalesDashboard dashboard={salesDashboard} />
           <SalesReport dashboard={salesDashboard} />
           <CategoryManager
@@ -529,8 +530,123 @@ export default function Admin() {
             onAddCategory={addCategory}
             onRenameCategory={renameCategory}
           />
+          </section>
 
-          <div className="grid gap-8 lg:grid-cols-[240px_1fr_280px]">
+          <aside className="space-y-8 border-l border-[#CCC5BD] pl-8">
+          <section>
+            <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+              Branding
+            </p>
+            <div className="mt-5 flex min-h-24 items-center justify-center border border-[#CCC5BD] p-6">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt="Logo Nomade"
+                  className="h-auto max-h-32 max-w-full object-contain"
+                />
+              ) : (
+                <span className="font-serif text-2xl">Nomade Project</span>
+              )}
+            </div>
+            <label className="mt-5 flex cursor-pointer items-center justify-center gap-3 border border-[#CCC5BD] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:border-[#252321]">
+              <Upload size={15} strokeWidth={1.5} />
+              Cambiar logo
+              <input type="file" accept="image/*" onChange={uploadLogo} className="hidden" />
+            </label>
+
+            <form onSubmit={saveBrandingForm} className="mt-8 space-y-4 border-t border-[#CCC5BD] pt-8">
+              <Field label="Texto contacto">
+                <input
+                  name="contact_heading"
+                  value={brandingForm.contact_heading}
+                  onChange={updateBrandingForm}
+                  className="input"
+                />
+              </Field>
+              <Field label="Whatsapp">
+                <input
+                  name="contact_whatsapp"
+                  value={brandingForm.contact_whatsapp}
+                  onChange={updateBrandingForm}
+                  className="input"
+                />
+              </Field>
+              <Field label="Mail">
+                <input
+                  name="contact_mail"
+                  value={brandingForm.contact_mail}
+                  onChange={updateBrandingForm}
+                  className="input"
+                />
+              </Field>
+              <Field label="Texto redes">
+                <input
+                  name="social_heading"
+                  value={brandingForm.social_heading}
+                  onChange={updateBrandingForm}
+                  className="input"
+                />
+              </Field>
+              <Field label="Instagram">
+                <input
+                  name="social_instagram"
+                  value={brandingForm.social_instagram}
+                  onChange={updateBrandingForm}
+                  className="input"
+                />
+              </Field>
+              <Field label="Facebook">
+                <input
+                  name="social_facebook"
+                  value={brandingForm.social_facebook}
+                  onChange={updateBrandingForm}
+                  className="input"
+                />
+              </Field>
+              <Field label="Titulo acerca">
+                <input
+                  name="about_title"
+                  value={brandingForm.about_title}
+                  onChange={updateBrandingForm}
+                  className="input"
+                />
+              </Field>
+              <Field label="Contenido acerca">
+                <textarea
+                  name="about_content"
+                  value={brandingForm.about_content}
+                  onChange={updateBrandingForm}
+                  rows="6"
+                  className="input resize-none leading-7"
+                />
+              </Field>
+              <Field label="Imagen acerca URL">
+                <input
+                  name="about_image"
+                  value={brandingForm.about_image}
+                  onChange={updateBrandingForm}
+                  className="input"
+                />
+              </Field>
+              <label className="flex cursor-pointer items-center justify-center gap-3 border border-[#CCC5BD] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:border-[#252321]">
+                <ImageUp size={15} strokeWidth={1.5} />
+                Subir imagen acerca
+                <input type="file" accept="image/*" onChange={uploadAboutImage} className="hidden" />
+              </label>
+              <button
+                type="submit"
+                className="inline-flex w-full items-center justify-center gap-3 border border-[#252321] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
+              >
+                <Save size={15} strokeWidth={1.5} />
+                Guardar branding
+              </button>
+            </form>
+          </section>
+          </aside>
+        </div>
+
+        <section className="border-t border-[#CCC5BD] pt-10">
+          <div className="grid gap-8 xl:grid-cols-[280px_minmax(0,1fr)_360px]">
             <div>
               <div className="mb-4 flex items-center justify-between gap-4">
                 <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
@@ -669,124 +785,11 @@ export default function Admin() {
             </section>
           </div>
         </section>
-
-        <aside className="space-y-8 border-l border-[#CCC5BD] pl-8">
-          <section>
-            <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
-              Branding
-            </p>
-            <div className="mt-5 flex min-h-24 items-center justify-center border border-[#CCC5BD] p-6">
-              {logoUrl ? (
-                <img
-                  src={logoUrl}
-                  alt="Logo Nomade"
-                  className="h-auto max-h-32 max-w-full object-contain"
-                />
-              ) : (
-                <span className="font-serif text-2xl">Nomade Project</span>
-              )}
-            </div>
-            <label className="mt-5 flex cursor-pointer items-center justify-center gap-3 border border-[#CCC5BD] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:border-[#252321]">
-              <Upload size={15} strokeWidth={1.5} />
-              Cambiar logo
-              <input type="file" accept="image/*" onChange={uploadLogo} className="hidden" />
-            </label>
-
-            <form onSubmit={saveBrandingForm} className="mt-8 space-y-4 border-t border-[#CCC5BD] pt-8">
-              <Field label="Texto contacto">
-                <input
-                  name="contact_heading"
-                  value={brandingForm.contact_heading}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <Field label="Whatsapp">
-                <input
-                  name="contact_whatsapp"
-                  value={brandingForm.contact_whatsapp}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <Field label="Mail">
-                <input
-                  name="contact_mail"
-                  value={brandingForm.contact_mail}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <Field label="Texto redes">
-                <input
-                  name="social_heading"
-                  value={brandingForm.social_heading}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <Field label="Instagram">
-                <input
-                  name="social_instagram"
-                  value={brandingForm.social_instagram}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <Field label="Facebook">
-                <input
-                  name="social_facebook"
-                  value={brandingForm.social_facebook}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <Field label="Titulo acerca">
-                <input
-                  name="about_title"
-                  value={brandingForm.about_title}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <Field label="Contenido acerca">
-                <textarea
-                  name="about_content"
-                  value={brandingForm.about_content}
-                  onChange={updateBrandingForm}
-                  rows="6"
-                  className="input resize-none leading-7"
-                />
-              </Field>
-              <Field label="Imagen acerca URL">
-                <input
-                  name="about_image"
-                  value={brandingForm.about_image}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <label className="flex cursor-pointer items-center justify-center gap-3 border border-[#CCC5BD] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:border-[#252321]">
-                <ImageUp size={15} strokeWidth={1.5} />
-                Subir imagen acerca
-                <input type="file" accept="image/*" onChange={uploadAboutImage} className="hidden" />
-              </label>
-              <button
-                type="submit"
-                className="inline-flex w-full items-center justify-center gap-3 border border-[#252321] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
-              >
-                <Save size={15} strokeWidth={1.5} />
-                Guardar branding
-              </button>
-            </form>
-          </section>
-
-          {status && (
-            <p className="animate-fadeIn border-t border-[#CCC5BD] pt-6 font-serif text-lg leading-7 text-[#5F5A55]">
-              {status}
-            </p>
-          )}
-        </aside>
+        {status && (
+          <p className="animate-fadeIn border-t border-[#CCC5BD] pt-6 font-serif text-lg leading-7 text-[#5F5A55]">
+            {status}
+          </p>
+        )}
       </main>
     </div>
   );
