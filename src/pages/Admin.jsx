@@ -1,7 +1,7 @@
 import React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, FileText, ImageUp, LogOut, Plus, Save, TrendingUp, Upload } from "lucide-react";
+import { ArrowLeft, ClipboardList, FileText, ImageUp, LogOut, Plus, Save, TrendingUp, Upload } from "lucide-react";
 import QuietLoader from "../components/QuietLoader.jsx";
 import { loadBranding, saveBranding } from "../lib/branding.js";
 import {
@@ -290,7 +290,15 @@ export default function Admin() {
     }
 
     const { error } = await supabase.from("productos").update(payload).eq("id", selectedId);
-    setStatus(error ? error.message : "Producto actualizado.");
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
+
+    setProductos((current) =>
+      current.map((product) => (product.id === selectedId ? { ...product, ...payload } : product))
+    );
+    setStatus("Producto actualizado.");
   };
 
   const createProduct = async () => {
@@ -505,16 +513,25 @@ export default function Admin() {
             Catalogo
           </Link>
           <h1 className="font-serif text-3xl">Backoffice Nomade</h1>
-          {hasSupabaseConfig && (
-            <button
-              type="button"
-              onClick={signOutAdmin}
+          <div className="flex items-center gap-4">
+            <Link
+              to="/admin/pedidos"
               className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
             >
-              <LogOut size={15} strokeWidth={1.5} />
-              Salir
-            </button>
-          )}
+              <ClipboardList size={15} strokeWidth={1.5} />
+              Pedidos historicos
+            </Link>
+            {hasSupabaseConfig && (
+              <button
+                type="button"
+                onClick={signOutAdmin}
+                className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
+              >
+                <LogOut size={15} strokeWidth={1.5} />
+                Salir
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -620,14 +637,24 @@ export default function Admin() {
                   className="input resize-none leading-7"
                 />
               </Field>
-              <Field label="Imagen acerca URL">
-                <input
-                  name="about_image"
-                  value={brandingForm.about_image}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
+              <div>
+                <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+                  Imagen acerca
+                </p>
+                <div className="mt-2 overflow-hidden border border-[#CCC5BD] bg-[#F0EEE9]">
+                  {brandingForm.about_image ? (
+                    <img
+                      src={brandingForm.about_image}
+                      alt="Imagen Acerca de Nomade"
+                      className="aspect-[4/3] w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex aspect-[4/3] items-center justify-center px-6 text-center font-serif text-lg leading-7 text-[#6B655F]">
+                      Sube una imagen para la pagina Acerca de Nomade.
+                    </div>
+                  )}
+                </div>
+              </div>
               <label className="flex cursor-pointer items-center justify-center gap-3 border border-[#CCC5BD] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:border-[#252321]">
                 <ImageUp size={15} strokeWidth={1.5} />
                 Subir imagen acerca

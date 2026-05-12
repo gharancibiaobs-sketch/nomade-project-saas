@@ -82,6 +82,14 @@ export function appendDemoOrder(order) {
   }
 }
 
+export function writeDemoOrders(orders) {
+  try {
+    window.localStorage.setItem(ORDERS_KEY, JSON.stringify(orders));
+  } catch {
+    // Non-critical in demo mode.
+  }
+}
+
 export function readDemoOrders() {
   try {
     return JSON.parse(window.localStorage.getItem(ORDERS_KEY)) ?? [];

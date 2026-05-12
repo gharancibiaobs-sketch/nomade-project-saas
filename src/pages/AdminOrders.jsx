@@ -1,0 +1,525 @@
+import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { ArrowLeft, LogOut, Save, Trash2 } from "lucide-react";
+import QuietLoader from "../components/QuietLoader.jsx";
+import { readDemoOrders, writeDemoOrders } from "../lib/demoStore.js";
+import { hasSupabaseConfig, supabase } from "../lib/supabase.js";
+import { formatCurrency } from "../utils/format.js";
+
+const emptyLogin = { email: "", password: "" };
+const emptyOrderForm = {
+  status_pago: "pagado",
+  delivery_method: "retiro",
+  payment_method: "tarjeta_demo",
+  subtotal: 0,
+  shipping_cost: 0,
+  total: 0,
+  customer_name: "",
+  customer_company: "",
+  customer_email: "",
+  customer_address: ""
+};
+
+export default function AdminOrders() {
+  const [session, setSession] = useState(null);
+  const [authReady, setAuthReady] = useState(!hasSupabaseConfig);
+  const [loginForm, setLoginForm] = useState(emptyLogin);
+  const [orders, setOrders] = useState([]);
+  const [selectedId, setSelectedId] = useState("");
+  const [form, setForm] = useState(emptyOrderForm);
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState("");
+
+  const selectedOrder = useMemo(
+    () => orders.find((order) => order.id === selectedId),
+    [orders, selectedId]
+  );
+
+  useEffect(() => {
+    if (!hasSupabaseConfig) return;
+
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setAuthReady(true);
+    });
+
+    const {
+      data: { subscription }
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      setAuthReady(true);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    async function loadOrders() {
+      setLoading(true);
+      if (hasSupabaseConfig && !session) {
+        setLoading(false);
+        return;
+      }
+
+      if (!hasSupabaseConfig) {
+        const demoOrders = readDemoOrders();
+        setOrders(demoOrders);
+        setSelectedId(demoOrders[0]?.id ?? "");
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("pedidos")
+        .select(
+          "id,total,subtotal,shipping_cost,delivery_method,payment_method,status_pago,items,customer_name,customer_company,customer_email,customer_address,created_at"
+        )
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        setStatus(error.message);
+        setOrders([]);
+      } else {
+        setOrders(data ?? []);
+        setSelectedId(data?.[0]?.id ?? "");
+      }
+      setLoading(false);
+    }
+
+    if (authReady) loadOrders();
+  }, [authReady, session]);
+
+  useEffect(() => {
+    if (!selectedOrder) {
+      setForm(emptyOrderForm);
+      return;
+    }
+
+    setForm({
+      status_pago: selectedOrder.status_pago ?? "pagado",
+      delivery_method: selectedOrder.delivery_method ?? "retiro",
+      payment_method: selectedOrder.payment_method ?? "tarjeta_demo",
+      subtotal: selectedOrder.subtotal ?? 0,
+      shipping_cost: selectedOrder.shipping_cost ?? 0,
+      total: selectedOrder.total ?? 0,
+      customer_name: selectedOrder.customer_name ?? "",
+      customer_company: selectedOrder.customer_company ?? "",
+      customer_email: selectedOrder.customer_email ?? "",
+      customer_address: selectedOrder.customer_address ?? ""
+    });
+  }, [selectedOrder]);
+
+  const updateLoginForm = (event) => {
+    const { name, value } = event.target;
+    setLoginForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const signInAdmin = async (event) => {
+    event.preventDefault();
+    setStatus("");
+    const { error } = await supabase.auth.signInWithPassword({
+      email: loginForm.email,
+      password: loginForm.password
+    });
+    if (error) setStatus(error.message);
+  };
+
+  const signOutAdmin = async () => {
+    await supabase.auth.signOut();
+    setOrders([]);
+    setSelectedId("");
+  };
+
+  const updateForm = (event) => {
+    const { name, value } = event.target;
+    setForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const saveOrder = async (event) => {
+    event.preventDefault();
+    if (!selectedOrder) return;
+
+    const payload = {
+      status_pago: form.status_pago,
+      delivery_method: form.delivery_method,
+      payment_method: form.payment_method.trim(),
+      subtotal: Number(form.subtotal),
+      shipping_cost: Number(form.shipping_cost),
+      total: Number(form.total),
+      customer_name: form.customer_name.trim(),
+      customer_company: form.customer_company.trim(),
+      customer_email: form.customer_email.trim(),
+      customer_address: form.customer_address.trim()
+    };
+
+    if (!hasSupabaseConfig) {
+      const nextOrders = orders.map((order) =>
+        order.id === selectedId ? { ...order, ...payload } : order
+      );
+      setOrders(nextOrders);
+      writeDemoOrders(nextOrders);
+      setStatus("Pedido actualizado en modo demo.");
+      return;
+    }
+
+    const { error } = await supabase.from("pedidos").update(payload).eq("id", selectedId);
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
+
+    setOrders((current) =>
+      current.map((order) => (order.id === selectedId ? { ...order, ...payload } : order))
+    );
+    setStatus("Pedido actualizado.");
+  };
+
+  const deleteOrder = async () => {
+    if (!selectedOrder) return;
+    const confirmed = window.confirm("Eliminar este pedido historico? Esta accion no se puede deshacer.");
+    if (!confirmed) return;
+
+    if (!hasSupabaseConfig) {
+      const nextOrders = orders.filter((order) => order.id !== selectedId);
+      setOrders(nextOrders);
+      writeDemoOrders(nextOrders);
+      setSelectedId(nextOrders[0]?.id ?? "");
+      setStatus("Pedido eliminado en modo demo.");
+      return;
+    }
+
+    const { error } = await supabase.from("pedidos").delete().eq("id", selectedId);
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
+
+    const nextOrders = orders.filter((order) => order.id !== selectedId);
+    setOrders(nextOrders);
+    setSelectedId(nextOrders[0]?.id ?? "");
+    setStatus("Pedido eliminado.");
+  };
+
+  if (!authReady || loading) {
+    return (
+      <div className="min-h-screen bg-[#FAF9F6] text-[#252321]">
+        <QuietLoader label="Abriendo pedidos" />
+      </div>
+    );
+  }
+
+  if (hasSupabaseConfig && !session) {
+    return (
+      <div className="min-h-screen bg-[#FAF9F6] px-5 py-8 text-[#252321] md:px-10">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
+        >
+          <ArrowLeft size={15} strokeWidth={1.5} />
+          Catalogo
+        </Link>
+
+        <main className="mx-auto mt-20 max-w-md">
+          <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+            Acceso admin
+          </p>
+          <h1 className="mt-5 font-serif text-5xl leading-tight">Pedidos historicos</h1>
+          <form onSubmit={signInAdmin} className="mt-8 space-y-5">
+            <Field label="Email">
+              <input
+                name="email"
+                type="email"
+                value={loginForm.email}
+                onChange={updateLoginForm}
+                className="input"
+              />
+            </Field>
+            <Field label="Password">
+              <input
+                name="password"
+                type="password"
+                value={loginForm.password}
+                onChange={updateLoginForm}
+                className="input"
+              />
+            </Field>
+            <button
+              type="submit"
+              className="w-full border border-[#252321] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
+            >
+              Entrar
+            </button>
+          </form>
+          {status && <p className="mt-6 font-serif text-lg leading-7 text-[#5F5A55]">{status}</p>}
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#FAF9F6] text-[#252321]">
+      <header className="border-b border-[#CCC5BD]">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-6 md:px-8 lg:px-10">
+          <div className="flex items-center gap-5">
+            <Link
+              to="/admin"
+              className="flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
+            >
+              <ArrowLeft size={15} strokeWidth={1.5} />
+              Admin
+            </Link>
+            <Link
+              to="/"
+              className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
+            >
+              Catalogo
+            </Link>
+          </div>
+          <h1 className="font-serif text-3xl">Pedidos historicos</h1>
+          {hasSupabaseConfig && (
+            <button
+              type="button"
+              onClick={signOutAdmin}
+              className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
+            >
+              <LogOut size={15} strokeWidth={1.5} />
+              Salir
+            </button>
+          )}
+        </div>
+      </header>
+
+      <main className="mx-auto grid max-w-7xl gap-10 px-5 py-10 md:px-8 lg:grid-cols-[360px_minmax(0,1fr)] lg:px-10">
+        <aside>
+          <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+            Seleccionar pedido
+          </p>
+          <div className="quiet-scrollbar mt-5 max-h-[640px] space-y-2 overflow-auto pr-2">
+            {orders.map((order) => (
+              <button
+                key={order.id}
+                type="button"
+                onClick={() => setSelectedId(order.id)}
+                className={`w-full border px-4 py-3 text-left transition ${
+                  selectedId === order.id ? "border-[#252321]" : "border-[#CCC5BD] hover:border-[#AFA79E]"
+                }`}
+              >
+                <span className="block font-serif text-lg">{formatOrderName(order)}</span>
+                <span className="mt-2 block font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+                  {formatCurrency(order.total)} / {order.status_pago}
+                </span>
+              </button>
+            ))}
+            {!orders.length && (
+              <p className="border border-[#CCC5BD] p-5 font-serif text-lg leading-7 text-[#5F5A55]">
+                No hay pedidos registrados.
+              </p>
+            )}
+          </div>
+        </aside>
+
+        {selectedOrder ? (
+          <section className="space-y-8">
+            <div className="border-b border-[#CCC5BD] pb-6">
+              <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+                Pedido {String(selectedOrder.id).slice(0, 8)}
+              </p>
+              <h2 className="mt-3 font-serif text-4xl">{formatCurrency(selectedOrder.total)}</h2>
+              <p className="mt-3 font-serif text-lg leading-7 text-[#5F5A55]">
+                {formatDate(selectedOrder.created_at)}
+              </p>
+            </div>
+
+            <form onSubmit={saveOrder} className="space-y-6">
+              <div className="grid gap-5 md:grid-cols-3">
+                <Field label="Estado pago">
+                  <select name="status_pago" value={form.status_pago} onChange={updateForm} className="input">
+                    <option value="pagado">pagado</option>
+                    <option value="pendiente">pendiente</option>
+                    <option value="anulado">anulado</option>
+                  </select>
+                </Field>
+                <Field label="Entrega">
+                  <select
+                    name="delivery_method"
+                    value={form.delivery_method}
+                    onChange={updateForm}
+                    className="input"
+                  >
+                    <option value="retiro">retiro</option>
+                    <option value="domicilio">domicilio</option>
+                  </select>
+                </Field>
+                <Field label="Metodo pago">
+                  <input
+                    name="payment_method"
+                    value={form.payment_method}
+                    onChange={updateForm}
+                    className="input"
+                  />
+                </Field>
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-3">
+                <Field label="Subtotal">
+                  <input
+                    name="subtotal"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.subtotal}
+                    onChange={updateForm}
+                    className="input"
+                  />
+                </Field>
+                <Field label="Envio">
+                  <input
+                    name="shipping_cost"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.shipping_cost}
+                    onChange={updateForm}
+                    className="input"
+                  />
+                </Field>
+                <Field label="Total">
+                  <input
+                    name="total"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.total}
+                    onChange={updateForm}
+                    className="input"
+                  />
+                </Field>
+              </div>
+
+              <div className="grid gap-5 md:grid-cols-2">
+                <Field label="Comprador">
+                  <input
+                    name="customer_name"
+                    value={form.customer_name}
+                    onChange={updateForm}
+                    className="input"
+                  />
+                </Field>
+                <Field label="Empresa">
+                  <input
+                    name="customer_company"
+                    value={form.customer_company}
+                    onChange={updateForm}
+                    className="input"
+                  />
+                </Field>
+                <Field label="Email">
+                  <input
+                    name="customer_email"
+                    type="email"
+                    value={form.customer_email}
+                    onChange={updateForm}
+                    className="input"
+                  />
+                </Field>
+                <Field label="Direccion">
+                  <input
+                    name="customer_address"
+                    value={form.customer_address}
+                    onChange={updateForm}
+                    className="input"
+                  />
+                </Field>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-3 border border-[#252321] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
+                >
+                  <Save size={15} strokeWidth={1.5} />
+                  Guardar pedido
+                </button>
+                <button
+                  type="button"
+                  onClick={deleteOrder}
+                  className="inline-flex items-center gap-3 border border-[#9A3F35] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#7B3028] transition hover:bg-[#7B3028] hover:text-[#FAF9F6]"
+                >
+                  <Trash2 size={15} strokeWidth={1.5} />
+                  Eliminar pedido
+                </button>
+              </div>
+            </form>
+
+            <OrderItems items={selectedOrder.items} />
+            {status && <p className="font-serif text-lg leading-7 text-[#5F5A55]">{status}</p>}
+          </section>
+        ) : (
+          <section className="border border-[#CCC5BD] p-8">
+            <p className="font-serif text-xl leading-8 text-[#5F5A55]">
+              Selecciona un pedido para editarlo o eliminarlo.
+            </p>
+          </section>
+        )}
+      </main>
+    </div>
+  );
+}
+
+function Field({ label, children }) {
+  return (
+    <label className="block">
+      <span className="mb-2 block font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+        {label}
+      </span>
+      {children}
+    </label>
+  );
+}
+
+function OrderItems({ items }) {
+  const safeItems = Array.isArray(items) ? items : [];
+
+  return (
+    <section className="border-t border-[#CCC5BD] pt-8">
+      <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+        Productos del pedido
+      </p>
+      <div className="mt-5 divide-y divide-[#CCC5BD] border-y border-[#CCC5BD]">
+        {safeItems.map((item) => (
+          <div key={`${item.id}-${item.nombre}`} className="grid gap-3 py-4 md:grid-cols-[1fr_120px_140px]">
+            <span className="font-serif text-xl">{item.nombre}</span>
+            <span className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+              {item.quantity} unidades
+            </span>
+            <span className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+              {formatCurrency(item.unit_price)}
+            </span>
+          </div>
+        ))}
+        {!safeItems.length && (
+          <p className="py-4 font-serif text-lg leading-7 text-[#5F5A55]">
+            Este pedido no tiene detalle de productos.
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function formatOrderName(order) {
+  const name = order.customer_name || "Cliente sin nombre";
+  const date = formatDate(order.created_at);
+  return `${name} / ${date}`;
+}
+
+function formatDate(value) {
+  if (!value) return "Sin fecha";
+  return new Intl.DateTimeFormat("es-CL", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(value));
+}

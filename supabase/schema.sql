@@ -132,6 +132,11 @@ on public.pedidos for update
 using (public.is_admin())
 with check (public.is_admin());
 
+drop policy if exists "Admins can delete orders" on public.pedidos;
+create policy "Admins can delete orders"
+on public.pedidos for delete
+using (public.is_admin());
+
 insert into public.categorias (nombre)
 values ('Objetos'), ('Textiles'), ('Iluminacion')
 on conflict (nombre) do nothing;
