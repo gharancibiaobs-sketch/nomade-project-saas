@@ -49,10 +49,11 @@ export default function App() {
       setLoading(true);
       if (!hasSupabaseConfig) {
         const demoProductos = readDemoProducts();
+        const activeProducts = demoProductos.filter((item) => item.activo !== false);
         const filtered =
           categoriaActiva === "todos"
-            ? demoProductos
-            : demoProductos.filter((item) => item.categoria_id === categoriaActiva);
+            ? activeProducts
+            : activeProducts.filter((item) => item.categoria_id === categoriaActiva);
         window.setTimeout(() => {
           setProductos(filtered);
           setLoading(false);
@@ -60,7 +61,7 @@ export default function App() {
         return;
       }
 
-      let query = supabase.from("productos").select("*").order("nombre");
+      let query = supabase.from("productos").select("*").eq("activo", true).order("nombre");
       if (categoriaActiva !== "todos") {
         query = query.eq("categoria_id", categoriaActiva);
       }

@@ -1,7 +1,7 @@
 import React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ClipboardList, FileText, ImageUp, LogOut, Plus, Save, TrendingUp, Upload } from "lucide-react";
+import { ArrowLeft, ClipboardList, FileText, ImageUp, LogOut, Plus, Save, Trash2, TrendingUp, Upload } from "lucide-react";
 import QuietLoader from "../components/QuietLoader.jsx";
 import { loadBranding, saveBranding } from "../lib/branding.js";
 import {
@@ -315,6 +315,7 @@ export default function Admin() {
       precio_oferta: null,
       stock_quantity: 0,
       categoria_id: Number(firstCategory.id),
+      activo: true,
       imagenes: []
     };
 
@@ -336,6 +337,43 @@ export default function Admin() {
     setProductos((current) => [data, ...current]);
     setSelectedId(data.id);
     setStatus("Producto creado.");
+  };
+
+  const toggleProductStatus = async () => {
+    if (!selectedProduct) return;
+
+    const nextActive = selectedProduct.activo === false;
+    const statusLabel = nextActive ? "reactivado" : "dado de baja";
+
+    if (!nextActive) {
+      const confirmed = window.confirm(
+        "Dar de baja este producto? Dejara de aparecer en el catalogo publico."
+      );
+      if (!confirmed) return;
+    }
+
+    if (!hasSupabaseConfig) {
+      setProductos((current) => {
+        const nextProducts = current.map((product) =>
+          product.id === selectedId ? { ...product, activo: nextActive } : product
+        );
+        writeDemoProducts(nextProducts);
+        return nextProducts;
+      });
+      setStatus(`Producto ${statusLabel} en modo demo.`);
+      return;
+    }
+
+    const { error } = await supabase.from("productos").update({ activo: nextActive }).eq("id", selectedId);
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
+
+    setProductos((current) =>
+      current.map((product) => (product.id === selectedId ? { ...product, activo: nextActive } : product))
+    );
+    setStatus(`Producto ${statusLabel}.`);
   };
 
   const uploadProductImage = async (event) => {
@@ -704,6 +742,11 @@ export default function Admin() {
                     <span className="mt-1 block font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
                       {formatCurrency(effectivePrice(product))}
                     </span>
+                    {product.activo === false && (
+                      <span className="mt-2 block font-sans text-[8pt] uppercase tracking-[0.16em] text-[#9A3F35]">
+                        Dado de baja
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -773,13 +816,27 @@ export default function Admin() {
                 />
               </Field>
 
-              <button
-                type="submit"
-                className="inline-flex items-center gap-3 border border-[#252321] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
-              >
-                <Save size={15} strokeWidth={1.5} />
-                Guardar producto
-              </button>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="submit"
+                  className="inline-flex items-center gap-3 border border-[#252321] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
+                >
+                  <Save size={15} strokeWidth={1.5} />
+                  Guardar producto
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleProductStatus}
+                  className={`inline-flex items-center gap-3 border px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition ${
+                    selectedProduct.activo === false
+                      ? "border-[#252321] text-[#252321] hover:bg-[#252321] hover:text-[#FAF9F6]"
+                      : "border-[#9A3F35] text-[#7B3028] hover:bg-[#7B3028] hover:text-[#FAF9F6]"
+                  }`}
+                >
+                  <Trash2 size={15} strokeWidth={1.5} />
+                  {selectedProduct.activo === false ? "Reactivar producto" : "Dar de baja"}
+                </button>
+              </div>
             </form>
             ) : (
               <div className="border border-[#CCC5BD] p-8">

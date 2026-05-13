@@ -10,6 +10,7 @@ create table if not exists public.productos (
   precio_original numeric(12, 2) not null check (precio_original >= 0),
   precio_oferta numeric(12, 2) check (precio_oferta is null or precio_oferta >= 0),
   stock_quantity int4 not null default 0 check (stock_quantity >= 0),
+  activo boolean not null default true,
   imagenes jsonb not null default '[]'::jsonb,
   categoria_id int8 not null references public.categorias(id) on update cascade on delete restrict,
   created_at timestamptz not null default now(),
@@ -51,6 +52,7 @@ alter table public.pedidos add column if not exists customer_name text;
 alter table public.pedidos add column if not exists customer_company text;
 alter table public.pedidos add column if not exists customer_email text;
 alter table public.pedidos add column if not exists customer_address text;
+alter table public.productos add column if not exists activo boolean not null default true;
 
 create or replace function public.is_admin()
 returns boolean

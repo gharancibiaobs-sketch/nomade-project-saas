@@ -13,6 +13,7 @@ export const demoProductos = [
     precio_oferta: 104,
     stock_quantity: 42,
     categoria_id: 1,
+    activo: true,
     imagenes: [
       "https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=900&q=85"
     ]
@@ -25,6 +26,7 @@ export const demoProductos = [
     precio_oferta: null,
     stock_quantity: 18,
     categoria_id: 2,
+    activo: true,
     imagenes: [
       "https://images.unsplash.com/photo-1600166898405-da9535204843?auto=format&fit=crop&w=900&q=85"
     ]
@@ -37,6 +39,7 @@ export const demoProductos = [
     precio_oferta: 279,
     stock_quantity: 11,
     categoria_id: 3,
+    activo: true,
     imagenes: [
       "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=85"
     ]
