@@ -54,7 +54,11 @@ export default function App() {
         const filtered =
           categoriaActiva === "todos"
             ? activeProducts
-            : activeProducts.filter((item) => item.categoria_id === categoriaActiva);
+            : categoriaActiva === "ofertas"
+              ? activeProducts.filter((item) => item.es_oferta === true)
+              : categoriaActiva === "novedades"
+                ? activeProducts.filter((item) => item.es_novedad === true)
+                : activeProducts.filter((item) => item.categoria_id === categoriaActiva);
         window.setTimeout(() => {
           setProductos(filtered);
           setLoading(false);
@@ -63,7 +67,11 @@ export default function App() {
       }
 
       let query = supabase.from("productos").select("*").eq("activo", true).order("nombre");
-      if (categoriaActiva !== "todos") {
+      if (categoriaActiva === "ofertas") {
+        query = query.eq("es_oferta", true);
+      } else if (categoriaActiva === "novedades") {
+        query = query.eq("es_novedad", true);
+      } else if (categoriaActiva !== "todos") {
         query = query.eq("categoria_id", categoriaActiva);
       }
       const { data } = await query;
@@ -76,6 +84,8 @@ export default function App() {
 
   const activeCategoryName = useMemo(() => {
     if (categoriaActiva === "todos") return "Coleccion completa";
+    if (categoriaActiva === "ofertas") return "En oferta";
+    if (categoriaActiva === "novedades") return "Novedades";
     return categorias.find((cat) => cat.id === categoriaActiva)?.nombre ?? "Seleccion";
   }, [categoriaActiva, categorias]);
 

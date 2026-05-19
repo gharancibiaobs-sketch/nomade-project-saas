@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, ShoppingBag } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { ShoppingBag } from "lucide-react";
+import PageHeader from "../components/PageHeader.jsx";
 import QuietLoader from "../components/QuietLoader.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { readDemoProducts } from "../lib/demoStore.js";
@@ -51,12 +52,9 @@ export default function ProductDetail() {
 
   if (!product) {
     return (
-      <main className="min-h-screen bg-[#FAF9F6] px-5 py-8 text-[#252321] md:px-10">
-        <Link to="/" className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em]">
-          <ArrowLeft size={15} strokeWidth={1.5} />
-          Catalogo
-        </Link>
-        <section className="mx-auto mt-20 max-w-2xl">
+      <main className="min-h-screen bg-[#FAF9F6] text-[#252321]">
+        <PageHeader backLabel="Catalogo" />
+        <section className="mx-auto max-w-2xl px-5 py-20 md:px-10">
           <h1 className="font-serif text-5xl">Producto no disponible</h1>
           <p className="mt-5 font-serif text-xl leading-8 text-[#5F5A55]">
             Este producto no esta publicado actualmente.
@@ -71,16 +69,9 @@ export default function ProductDetail() {
   const hasOffer = hasValidOffer(product);
 
   return (
-    <main className="min-h-screen bg-[#FAF9F6] px-5 py-8 text-[#252321] md:px-10">
-      <Link
-        to="/"
-        className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
-      >
-        <ArrowLeft size={15} strokeWidth={1.5} />
-        Catalogo
-      </Link>
-
-      <section className="mx-auto mt-12 grid max-w-7xl gap-12 lg:grid-cols-[1.05fr_0.8fr]">
+    <main className="min-h-screen bg-[#FAF9F6] text-[#252321]">
+      <PageHeader backLabel="Catalogo" />
+      <section className="mx-auto grid max-w-7xl gap-12 px-5 py-12 md:px-10 lg:grid-cols-[1.05fr_0.8fr]">
         <div>
           <div className="overflow-hidden bg-[#F0EEE9]">
             <img
@@ -111,6 +102,10 @@ export default function ProductDetail() {
           <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Detalle del producto
           </p>
+          <div className="mt-5 flex flex-wrap gap-3 font-sans text-[8pt] uppercase tracking-[0.16em] text-[#6B655F]">
+            {product.es_oferta === true && <span>En oferta</span>}
+            {product.es_novedad === true && <span>Novedad</span>}
+          </div>
           <h1 className="mt-5 font-serif text-5xl leading-tight">{product.nombre}</h1>
           <p className="mt-6 font-serif text-xl leading-9 text-[#5F5A55]">{product.descripcion}</p>
 

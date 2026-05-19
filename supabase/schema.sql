@@ -12,6 +12,8 @@ create table if not exists public.productos (
   precio_oferta numeric(12, 2) check (precio_oferta is null or precio_oferta >= 0),
   stock_quantity int4 not null default 0 check (stock_quantity >= 0),
   activo boolean not null default true,
+  es_oferta boolean not null default false,
+  es_novedad boolean not null default false,
   talles text not null default '',
   medidas text not null default '',
   imagenes jsonb not null default '[]'::jsonb,
@@ -78,6 +80,8 @@ alter table public.pedidos add column if not exists customer_email text;
 alter table public.pedidos add column if not exists customer_address text;
 alter table public.pedidos add column if not exists paid_at timestamptz;
 alter table public.productos add column if not exists activo boolean not null default true;
+alter table public.productos add column if not exists es_oferta boolean not null default false;
+alter table public.productos add column if not exists es_novedad boolean not null default false;
 alter table public.categorias add column if not exists activo boolean not null default true;
 alter table public.productos add column if not exists talles text not null default '';
 alter table public.productos add column if not exists medidas text not null default '';

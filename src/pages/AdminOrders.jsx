@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, LogOut, Save, Trash2 } from "lucide-react";
+import { LogOut, Save, Trash2 } from "lucide-react";
+import PageHeader from "../components/PageHeader.jsx";
 import QuietLoader from "../components/QuietLoader.jsx";
 import { readDemoOrders, writeDemoOrders } from "../lib/demoStore.js";
 import { hasSupabaseConfig, supabase } from "../lib/supabase.js";
@@ -44,6 +45,28 @@ export default function AdminOrders() {
     () => orders.find((order) => order.id === selectedId),
     [orders, selectedId]
   );
+  const orderDirty = useMemo(() => {
+    if (!selectedOrder) return false;
+    return (
+      form.status_pago !== (selectedOrder.status_pago ?? "pagado") ||
+      form.delivery_method !== (selectedOrder.delivery_method ?? "retiro") ||
+      form.payment_method !== (selectedOrder.payment_method ?? "tarjeta_demo") ||
+      Number(form.subtotal || 0) !== Number(selectedOrder.subtotal ?? 0) ||
+      Number(form.shipping_cost || 0) !== Number(selectedOrder.shipping_cost ?? 0) ||
+      Number(form.card_surcharge || 0) !== Number(selectedOrder.card_surcharge ?? 0) ||
+      Number(form.tax_amount || 0) !== Number(selectedOrder.tax_amount ?? 0) ||
+      Number(form.total || 0) !== Number(selectedOrder.total ?? 0) ||
+      form.delivery_region !== (selectedOrder.delivery_region ?? "") ||
+      form.payment_provider !== (selectedOrder.payment_provider ?? "") ||
+      form.payment_id !== (selectedOrder.payment_id ?? "") ||
+      form.payment_status !== (selectedOrder.payment_status ?? "") ||
+      form.checkout_url !== (selectedOrder.checkout_url ?? "") ||
+      form.customer_name !== (selectedOrder.customer_name ?? "") ||
+      form.customer_company !== (selectedOrder.customer_company ?? "") ||
+      form.customer_email !== (selectedOrder.customer_email ?? "") ||
+      form.customer_address !== (selectedOrder.customer_address ?? "")
+    );
+  }, [form, selectedOrder]);
   const visibleOrders = useMemo(() => filterOrdersByDateRange(orders, dateFrom, dateTo), [orders, dateFrom, dateTo]);
 
   useEffect(() => {
@@ -237,16 +260,9 @@ export default function AdminOrders() {
 
   if (hasSupabaseConfig && !session) {
     return (
-      <div className="min-h-screen bg-[#FAF9F6] px-5 py-8 text-[#252321] md:px-10">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
-        >
-          <ArrowLeft size={15} strokeWidth={1.5} />
-          Catalogo
-        </Link>
-
-        <main className="mx-auto mt-20 max-w-md">
+      <div className="min-h-screen bg-[#FAF9F6] text-[#252321]">
+        <PageHeader backLabel="Catalogo" title="Pedidos historicos" />
+        <main className="mx-auto max-w-md px-5 py-16 md:px-10">
           <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Acceso admin
           </p>
@@ -285,36 +301,19 @@ export default function AdminOrders() {
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-[#252321]">
-      <header className="border-b border-[#CCC5BD]">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-6 md:px-8 lg:px-10">
-          <div className="flex items-center gap-5">
-            <Link
-              to="/admin"
-              className="flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
-            >
-              <ArrowLeft size={15} strokeWidth={1.5} />
-              Admin
-            </Link>
-            <Link
-              to="/"
-              className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
-            >
-              Catalogo
-            </Link>
-          </div>
-          <h1 className="font-serif text-3xl">Pedidos historicos</h1>
-          {hasSupabaseConfig && (
-            <button
-              type="button"
-              onClick={signOutAdmin}
-              className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
-            >
-              <LogOut size={15} strokeWidth={1.5} />
-              Salir
-            </button>
-          )}
+      <PageHeader backLabel="Admin" backTo="/admin" title="Pedidos historicos" />
+      {hasSupabaseConfig && (
+        <div className="mx-auto flex max-w-7xl justify-end px-5 pt-5 md:px-8 lg:px-10">
+          <button
+            type="button"
+            onClick={signOutAdmin}
+            className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
+          >
+            <LogOut size={15} strokeWidth={1.5} />
+            Salir
+          </button>
         </div>
-      </header>
+      )}
 
       <main className="mx-auto grid max-w-7xl gap-10 px-5 py-10 md:px-8 lg:grid-cols-[360px_minmax(0,1fr)] lg:px-10">
         <aside>
@@ -542,7 +541,7 @@ export default function AdminOrders() {
               <div className="flex flex-wrap gap-3">
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-3 border border-[#252321] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
+                  className={saveButtonClass(orderDirty, "inline-flex items-center gap-3")}
                 >
                   <Save size={15} strokeWidth={1.5} />
                   Guardar pedido
@@ -639,4 +638,11 @@ function filterOrdersByDateRange(orders, from, to) {
     const time = new Date(order.created_at).getTime();
     return time >= fromTime && time <= toTime;
   });
+}
+
+function saveButtonClass(isDirty, extra = "") {
+  const state = isDirty
+    ? "border-[#9A3F35] bg-[#FEE2E2] text-[#7B3028] hover:bg-[#7B3028] hover:text-[#FAF9F6]"
+    : "border-[#252321] text-[#252321] hover:bg-[#252321] hover:text-[#FAF9F6]";
+  return `${extra} border px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition ${state}`;
 }

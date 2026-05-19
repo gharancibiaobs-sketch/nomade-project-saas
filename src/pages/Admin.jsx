@@ -2,6 +2,7 @@ import React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ClipboardList, FileText, ImageUp, LogOut, Plus, Save, Trash2, TrendingUp, Upload } from "lucide-react";
+import PageHeader from "../components/PageHeader.jsx";
 import QuietLoader from "../components/QuietLoader.jsx";
 import { loadBranding, saveBranding } from "../lib/branding.js";
 import {
@@ -25,7 +26,9 @@ const emptyForm = {
   stock_quantity: "",
   categoria_id: "",
   talles: "",
-  medidas: ""
+  medidas: "",
+  es_oferta: false,
+  es_novedad: false
 };
 
 const emptyBranding = {
@@ -52,6 +55,7 @@ export default function Admin() {
   const [selectedId, setSelectedId] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [brandingForm, setBrandingForm] = useState(emptyBranding);
+  const [savedBrandingForm, setSavedBrandingForm] = useState(emptyBranding);
   const [logoUrl, setLogoUrl] = useState("");
   const [salesOrders, setSalesOrders] = useState([]);
   const [salesFrom, setSalesFrom] = useState("");
@@ -67,6 +71,25 @@ export default function Admin() {
   const inactiveCategories = useMemo(() => categorias.filter((cat) => cat.activo === false), [categorias]);
   const activeProducts = useMemo(() => productos.filter((product) => product.activo !== false), [productos]);
   const inactiveProducts = useMemo(() => productos.filter((product) => product.activo === false), [productos]);
+  const productDirty = useMemo(() => {
+    if (!selectedProduct) return false;
+    return (
+      form.nombre !== (selectedProduct.nombre ?? "") ||
+      form.descripcion !== (selectedProduct.descripcion ?? "") ||
+      Number(form.precio_original || 0) !== Number(selectedProduct.precio_original ?? 0) ||
+      (form.precio_oferta === "" ? null : Number(form.precio_oferta)) !== (selectedProduct.precio_oferta ?? null) ||
+      Number(form.stock_quantity || 0) !== Number(selectedProduct.stock_quantity ?? 0) ||
+      Number(form.categoria_id) !== Number(selectedProduct.categoria_id) ||
+      form.talles !== (selectedProduct.talles ?? "") ||
+      form.medidas !== (selectedProduct.medidas ?? "") ||
+      form.es_oferta !== (selectedProduct.es_oferta === true) ||
+      form.es_novedad !== (selectedProduct.es_novedad === true)
+    );
+  }, [form, selectedProduct]);
+  const brandingDirty = useMemo(
+    () => JSON.stringify(brandingForm) !== JSON.stringify(savedBrandingForm),
+    [brandingForm, savedBrandingForm]
+  );
 
   useEffect(() => {
     if (!hasSupabaseConfig) return;
@@ -103,6 +126,7 @@ export default function Admin() {
         setSalesOrders(readDemoOrders().filter((order) => order.status_pago === "pagado"));
         setLogoUrl(readDemoLogo());
         setBrandingForm(branding);
+        setSavedBrandingForm(branding);
         setLoading(false);
         return;
       }
@@ -133,6 +157,7 @@ export default function Admin() {
       setSalesOrders(orderData ?? []);
       setLogoUrl(logoData?.valor ?? "");
       setBrandingForm(branding);
+      setSavedBrandingForm(branding);
       setLoading(false);
     }
 
@@ -153,13 +178,16 @@ export default function Admin() {
       stock_quantity: selectedProduct.stock_quantity ?? "",
       categoria_id: selectedProduct.categoria_id ?? "",
       talles: selectedProduct.talles ?? "",
-      medidas: selectedProduct.medidas ?? ""
+      medidas: selectedProduct.medidas ?? "",
+      es_oferta: selectedProduct.es_oferta === true,
+      es_novedad: selectedProduct.es_novedad === true
     });
   }, [selectedProduct]);
 
   const updateForm = (event) => {
     const { name, value } = event.target;
-    setForm((current) => ({ ...current, [name]: value }));
+    const nextValue = event.target.type === "checkbox" ? event.target.checked : value;
+    setForm((current) => ({ ...current, [name]: nextValue }));
   };
 
   const updateLoginForm = (event) => {
@@ -192,6 +220,7 @@ export default function Admin() {
   const saveBrandingForm = async (event) => {
     event.preventDefault();
     const { error } = await saveBranding(brandingForm);
+    if (!error) setSavedBrandingForm(brandingForm);
     setStatus(error ? error.message : "Branding actualizado.");
   };
 
@@ -331,7 +360,9 @@ export default function Admin() {
       stock_quantity: Number(form.stock_quantity),
       categoria_id: categoryId,
       talles: form.talles.trim(),
-      medidas: form.medidas.trim()
+      medidas: form.medidas.trim(),
+      es_oferta: form.es_oferta === true,
+      es_novedad: form.es_novedad === true
     };
 
     if (!hasSupabaseConfig) {
@@ -373,6 +404,8 @@ export default function Admin() {
       stock_quantity: 0,
       categoria_id: Number(firstCategory.id),
       activo: true,
+      es_oferta: false,
+      es_novedad: false,
       talles: "",
       medidas: "",
       imagenes: []
@@ -518,6 +551,7 @@ export default function Admin() {
       const previewUrl = await fileToDataUrl(file);
       const nextBranding = { ...brandingForm, about_image: previewUrl };
       setBrandingForm(nextBranding);
+      setSavedBrandingForm(nextBranding);
       await saveBranding(nextBranding);
       setStatus("Imagen de Acerca de Nomade actualizada en modo demo.");
       return;
@@ -537,6 +571,7 @@ export default function Admin() {
     const nextBranding = { ...brandingForm, about_image: data.publicUrl };
     setBrandingForm(nextBranding);
     const { error } = await saveBranding(nextBranding);
+    if (!error) setSavedBrandingForm(nextBranding);
     setStatus(error ? error.message : "Imagen de Acerca de Nomade actualizada.");
   };
 
@@ -550,16 +585,9 @@ export default function Admin() {
 
   if (hasSupabaseConfig && !session) {
     return (
-      <div className="min-h-screen bg-[#FAF9F6] px-5 py-8 text-[#252321] md:px-10">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
-        >
-          <ArrowLeft size={15} strokeWidth={1.5} />
-          Catalogo
-        </Link>
-
-        <main className="mx-auto mt-20 max-w-md">
+      <div className="min-h-screen bg-[#FAF9F6] text-[#252321]">
+        <PageHeader backLabel="Catalogo" title="Backoffice Nomade" />
+        <main className="mx-auto max-w-md px-5 py-16 md:px-10">
           <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Acceso admin
           </p>
@@ -601,16 +629,29 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-[#252321]">
       <header className="border-b border-[#CCC5BD]">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-6 md:px-8 lg:px-10">
-          <Link
-            to="/"
-            className="flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
-          >
-            <ArrowLeft size={15} strokeWidth={1.5} />
-            Catalogo
-          </Link>
-          <h1 className="font-serif text-3xl">Backoffice Nomade</h1>
+        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-6 md:px-8 lg:px-10">
+          <div className="flex flex-wrap items-center justify-between gap-5">
+            <Link to="/" className="flex items-center">
+              {logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt="Nomade Project"
+                  className="h-auto max-h-20 max-w-[64vw] object-contain md:max-h-24 md:max-w-[520px]"
+                />
+              ) : (
+                <span className="font-serif text-4xl text-[#252321]">Nomade Project</span>
+              )}
+            </Link>
+            <h1 className="font-serif text-3xl">Backoffice Nomade</h1>
+          </div>
           <div className="flex items-center gap-4">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
+            >
+              <ArrowLeft size={15} strokeWidth={1.5} />
+              Catalogo
+            </Link>
             <Link
               to="/admin/pedidos"
               className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
@@ -789,7 +830,7 @@ export default function Admin() {
               </label>
               <button
                 type="submit"
-                className="inline-flex w-full items-center justify-center gap-3 border border-[#252321] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
+                className={saveButtonClass(brandingDirty, "inline-flex w-full items-center justify-center gap-3")}
               >
                 <Save size={15} strokeWidth={1.5} />
                 Guardar branding
@@ -891,6 +932,30 @@ export default function Admin() {
                     className="input"
                   />
                 </Field>
+                <label className="flex items-center gap-3 border border-[#CCC5BD] px-4 py-3">
+                  <input
+                    name="es_oferta"
+                    type="checkbox"
+                    checked={form.es_oferta}
+                    onChange={updateForm}
+                    className="h-4 w-4 accent-[#252321]"
+                  />
+                  <span className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+                    Marcar como oferta
+                  </span>
+                </label>
+                <label className="flex items-center gap-3 border border-[#CCC5BD] px-4 py-3">
+                  <input
+                    name="es_novedad"
+                    type="checkbox"
+                    checked={form.es_novedad}
+                    onChange={updateForm}
+                    className="h-4 w-4 accent-[#252321]"
+                  />
+                  <span className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+                    Marcar como novedad
+                  </span>
+                </label>
               </div>
 
               <Field label="Descripcion tecnica">
@@ -906,7 +971,7 @@ export default function Admin() {
               <div className="flex flex-wrap gap-3">
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-3 border border-[#252321] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
+                  className={saveButtonClass(productDirty, "inline-flex items-center gap-3")}
                 >
                   <Save size={15} strokeWidth={1.5} />
                   Guardar producto
@@ -1391,7 +1456,7 @@ function CategoryListSection({
             <button
               type="button"
               onClick={() => onRenameCategory(cat.id, drafts[cat.id] ?? cat.nombre)}
-              className="border border-[#CCC5BD] px-4 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] transition hover:border-[#252321] hover:text-[#252321]"
+              className={saveButtonClass((drafts[cat.id] ?? cat.nombre) !== cat.nombre, "")}
             >
               Guardar
             </button>
@@ -1436,6 +1501,13 @@ function normalizeImages(value) {
   }
 }
 
+function saveButtonClass(isDirty, extra = "") {
+  const state = isDirty
+    ? "border-[#9A3F35] bg-[#FEE2E2] text-[#7B3028] hover:bg-[#7B3028] hover:text-[#FAF9F6]"
+    : "border-[#252321] text-[#252321] hover:bg-[#252321] hover:text-[#FAF9F6]";
+  return `${extra} border px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition ${state}`;
+}
+
 function Metric({ label, value }) {
   return (
     <div>
@@ -1477,6 +1549,16 @@ function ProductListSection({ title, products, selectedId, setSelectedId, inacti
             {inactive && (
               <span className="mt-2 block font-sans text-[8pt] uppercase tracking-[0.16em] text-[#9A3F35]">
                 Dado de baja
+              </span>
+            )}
+            {product.es_novedad === true && (
+              <span className="mt-2 block font-sans text-[8pt] uppercase tracking-[0.16em] text-[#6B655F]">
+                Novedad
+              </span>
+            )}
+            {product.es_oferta === true && (
+              <span className="mt-2 block font-sans text-[8pt] uppercase tracking-[0.16em] text-[#6B655F]">
+                Oferta
               </span>
             )}
           </button>

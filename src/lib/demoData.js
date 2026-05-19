@@ -14,6 +14,8 @@ export const demoProductos = [
     stock_quantity: 42,
     categoria_id: 1,
     activo: true,
+    es_oferta: true,
+    es_novedad: true,
     talles: "",
     medidas: "18 x 18 cm",
     imagenes: [
@@ -29,6 +31,8 @@ export const demoProductos = [
     stock_quantity: 18,
     categoria_id: 2,
     activo: true,
+    es_oferta: false,
+    es_novedad: false,
     talles: "S/M/L",
     medidas: "130 x 180 cm",
     imagenes: [
@@ -44,6 +48,8 @@ export const demoProductos = [
     stock_quantity: 11,
     categoria_id: 3,
     activo: true,
+    es_oferta: true,
+    es_novedad: true,
     talles: "",
     medidas: "32 x 46 cm",
     imagenes: [

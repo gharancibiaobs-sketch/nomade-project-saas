@@ -40,6 +40,10 @@ export default function ProductCard({ product }) {
 
       <div className="space-y-4">
         <div className="min-w-0">
+          <div className="mb-3 flex flex-wrap gap-2 font-sans text-[8pt] uppercase tracking-[0.16em] text-[#6B655F]">
+            {product.es_oferta === true && <span>En oferta</span>}
+            {product.es_novedad === true && <span>Novedad</span>}
+          </div>
           <h2 className="font-serif text-[15pt] leading-tight text-[#252321]">
             {product.nombre}
           </h2>
