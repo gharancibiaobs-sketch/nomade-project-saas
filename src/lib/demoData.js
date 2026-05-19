@@ -14,6 +14,8 @@ export const demoProductos = [
     stock_quantity: 42,
     categoria_id: 1,
     activo: true,
+    talles: "",
+    medidas: "18 x 18 cm",
     imagenes: [
       "https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=900&q=85"
     ]
@@ -27,6 +29,8 @@ export const demoProductos = [
     stock_quantity: 18,
     categoria_id: 2,
     activo: true,
+    talles: "S/M/L",
+    medidas: "130 x 180 cm",
     imagenes: [
       "https://images.unsplash.com/photo-1600166898405-da9535204843?auto=format&fit=crop&w=900&q=85"
     ]
@@ -40,6 +44,8 @@ export const demoProductos = [
     stock_quantity: 11,
     categoria_id: 3,
     activo: true,
+    talles: "",
+    medidas: "32 x 46 cm",
     imagenes: [
       "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=85"
     ]
@@ -59,5 +65,7 @@ export const demoBranding = {
   about_content:
     "Nomade nace como una seleccion de objetos con oficio, materia y pausa. Cada pieza se elige para acompanar proyectos que buscan belleza cotidiana sin exceso.",
   about_image:
-    "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=1200&q=85"
+    "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=1200&q=85",
+  tax_condition: "exento",
+  tax_percent: "19"
 };

@@ -23,7 +23,9 @@ const emptyForm = {
   precio_original: "",
   precio_oferta: "",
   stock_quantity: "",
-  categoria_id: ""
+  categoria_id: "",
+  talles: "",
+  medidas: ""
 };
 
 const emptyBranding = {
@@ -35,7 +37,9 @@ const emptyBranding = {
   social_facebook: "",
   about_title: "",
   about_content: "",
-  about_image: ""
+  about_image: "",
+  tax_condition: "exento",
+  tax_percent: "19"
 };
 
 export default function Admin() {
@@ -50,6 +54,8 @@ export default function Admin() {
   const [brandingForm, setBrandingForm] = useState(emptyBranding);
   const [logoUrl, setLogoUrl] = useState("");
   const [salesOrders, setSalesOrders] = useState([]);
+  const [salesFrom, setSalesFrom] = useState("");
+  const [salesTo, setSalesTo] = useState("");
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("");
 
@@ -57,6 +63,8 @@ export default function Admin() {
     () => productos.find((product) => product.id === selectedId),
     [productos, selectedId]
   );
+  const activeProducts = useMemo(() => productos.filter((product) => product.activo !== false), [productos]);
+  const inactiveProducts = useMemo(() => productos.filter((product) => product.activo === false), [productos]);
 
   useEffect(() => {
     if (!hasSupabaseConfig) return;
@@ -110,7 +118,7 @@ export default function Admin() {
           supabase
             .from("pedidos")
             .select(
-              "total, subtotal, shipping_cost, delivery_method, payment_method, status_pago, items, created_at"
+              "total, subtotal, shipping_cost, card_surcharge, tax_amount, delivery_method, payment_method, status_pago, items, created_at"
             )
             .eq("status_pago", "pagado"),
           supabase.from("configuracion_sitio").select("valor").eq("clave", "logo_url").single(),
@@ -141,7 +149,9 @@ export default function Admin() {
       precio_original: selectedProduct.precio_original ?? "",
       precio_oferta: selectedProduct.precio_oferta ?? "",
       stock_quantity: selectedProduct.stock_quantity ?? "",
-      categoria_id: selectedProduct.categoria_id ?? ""
+      categoria_id: selectedProduct.categoria_id ?? "",
+      talles: selectedProduct.talles ?? "",
+      medidas: selectedProduct.medidas ?? ""
     });
   }, [selectedProduct]);
 
@@ -183,9 +193,14 @@ export default function Admin() {
     setStatus(error ? error.message : "Branding actualizado.");
   };
 
+  const filteredSalesOrders = useMemo(
+    () => filterOrdersByDateRange(salesOrders, salesFrom, salesTo),
+    [salesOrders, salesFrom, salesTo]
+  );
+
   const salesDashboard = useMemo(
-    () => buildSalesDashboard(salesOrders, productos, categorias),
-    [salesOrders, productos, categorias]
+    () => buildSalesDashboard(filteredSalesOrders, productos, categorias),
+    [filteredSalesOrders, productos, categorias]
   );
 
   const validateCategory = () => {
@@ -274,7 +289,9 @@ export default function Admin() {
       precio_original: Number(form.precio_original),
       precio_oferta: form.precio_oferta === "" ? null : Number(form.precio_oferta),
       stock_quantity: Number(form.stock_quantity),
-      categoria_id: categoryId
+      categoria_id: categoryId,
+      talles: form.talles.trim(),
+      medidas: form.medidas.trim()
     };
 
     if (!hasSupabaseConfig) {
@@ -316,6 +333,8 @@ export default function Admin() {
       stock_quantity: 0,
       categoria_id: Number(firstCategory.id),
       activo: true,
+      talles: "",
+      medidas: "",
       imagenes: []
     };
 
@@ -576,7 +595,13 @@ export default function Admin() {
       <main className="mx-auto max-w-7xl space-y-12 px-5 py-10 md:px-8 lg:px-10">
         <div className="grid gap-10 lg:grid-cols-[1.5fr_0.8fr]">
           <section className="space-y-8">
-          <SalesDashboard dashboard={salesDashboard} />
+          <SalesDashboard
+            dashboard={salesDashboard}
+            salesFrom={salesFrom}
+            salesTo={salesTo}
+            setSalesFrom={setSalesFrom}
+            setSalesTo={setSalesTo}
+          />
           <SalesReport dashboard={salesDashboard} />
           <CategoryManager
             categorias={categorias}
@@ -675,6 +700,28 @@ export default function Admin() {
                   className="input resize-none leading-7"
                 />
               </Field>
+              <Field label="Condicion IVA">
+                <select
+                  name="tax_condition"
+                  value={brandingForm.tax_condition}
+                  onChange={updateBrandingForm}
+                  className="input"
+                >
+                  <option value="exento">Exento / no aplica IVA</option>
+                  <option value="responsable_inscripto">Afecto IVA / responsable</option>
+                </select>
+              </Field>
+              <Field label="Porcentaje IVA">
+                <input
+                  name="tax_percent"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={brandingForm.tax_percent}
+                  onChange={updateBrandingForm}
+                  className="input"
+                />
+              </Field>
               <div>
                 <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
                   Imagen acerca
@@ -726,29 +773,9 @@ export default function Admin() {
                   Nuevo
                 </button>
               </div>
-              <div className="quiet-scrollbar max-h-[560px] space-y-2 overflow-auto pr-2">
-                {productos.map((product) => (
-                  <button
-                    key={product.id}
-                    type="button"
-                    onClick={() => setSelectedId(product.id)}
-                    className={`w-full border px-4 py-3 text-left transition ${
-                      selectedId === product.id
-                        ? "border-[#252321]"
-                        : "border-[#CCC5BD] hover:border-[#AFA79E]"
-                    }`}
-                  >
-                    <span className="block font-serif text-lg">{product.nombre}</span>
-                    <span className="mt-1 block font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
-                      {formatCurrency(effectivePrice(product))}
-                    </span>
-                    {product.activo === false && (
-                      <span className="mt-2 block font-sans text-[8pt] uppercase tracking-[0.16em] text-[#9A3F35]">
-                        Dado de baja
-                      </span>
-                    )}
-                  </button>
-                ))}
+              <div className="quiet-scrollbar max-h-[560px] space-y-5 overflow-auto pr-2">
+                <ProductListSection title="Activos" products={activeProducts} selectedId={selectedId} setSelectedId={setSelectedId} />
+                <ProductListSection title="Dados de baja" products={inactiveProducts} selectedId={selectedId} setSelectedId={setSelectedId} inactive />
               </div>
             </div>
 
@@ -801,6 +828,24 @@ export default function Admin() {
                     min="0"
                     value={form.stock_quantity}
                     onChange={updateForm}
+                    className="input"
+                  />
+                </Field>
+                <Field label="Talles">
+                  <input
+                    name="talles"
+                    value={form.talles}
+                    onChange={updateForm}
+                    placeholder="XS/S/M/L/XL"
+                    className="input"
+                  />
+                </Field>
+                <Field label="Medidas">
+                  <input
+                    name="medidas"
+                    value={form.medidas}
+                    onChange={updateForm}
+                    placeholder="XX x XX cm"
                     className="input"
                   />
                 </Field>
@@ -947,6 +992,16 @@ function buildSalesDashboard(orders, products, categories) {
   };
 }
 
+function filterOrdersByDateRange(orders, from, to) {
+  if (!from && !to) return orders;
+  const fromTime = from ? new Date(`${from}T00:00:00`).getTime() : Number.NEGATIVE_INFINITY;
+  const toTime = to ? new Date(`${to}T23:59:59`).getTime() : Number.POSITIVE_INFINITY;
+  return orders.filter((order) => {
+    const time = new Date(order.created_at).getTime();
+    return time >= fromTime && time <= toTime;
+  });
+}
+
 function generateSalesPdf(dashboard) {
   const generatedAt = new Date().toLocaleString("es-CL");
   const rows = dashboard.productRows
@@ -1036,7 +1091,7 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function SalesDashboard({ dashboard }) {
+function SalesDashboard({ dashboard, salesFrom, salesTo, setSalesFrom, setSalesTo }) {
   return (
     <section className="border-b border-[#CCC5BD] pb-8">
       <div className="mb-6 flex items-center justify-between gap-5">
@@ -1047,6 +1102,25 @@ function SalesDashboard({ dashboard }) {
           <h2 className="mt-3 font-serif text-4xl">Integridad financiera</h2>
         </div>
         <TrendingUp size={22} strokeWidth={1.4} className="text-[#6B655F]" />
+      </div>
+
+      <div className="mb-8 grid gap-4 md:grid-cols-[1fr_1fr_auto]">
+        <Field label="Fecha desde">
+          <input type="date" value={salesFrom} onChange={(event) => setSalesFrom(event.target.value)} className="input" />
+        </Field>
+        <Field label="Fecha hasta">
+          <input type="date" value={salesTo} onChange={(event) => setSalesTo(event.target.value)} className="input" />
+        </Field>
+        <button
+          type="button"
+          onClick={() => {
+            setSalesFrom("");
+            setSalesTo("");
+          }}
+          className="self-end border border-[#CCC5BD] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:border-[#252321]"
+        >
+          Limpiar filtro
+        </button>
       </div>
 
       <div className="grid gap-5 md:grid-cols-4">
@@ -1282,5 +1356,40 @@ function Field({ label, children }) {
       </span>
       {children}
     </label>
+  );
+}
+
+function ProductListSection({ title, products, selectedId, setSelectedId, inactive = false }) {
+  return (
+    <section>
+      <p className="mb-2 font-sans text-[8pt] uppercase tracking-[0.16em] text-[#6B655F]">{title}</p>
+      <div className="space-y-2">
+        {products.map((product) => (
+          <button
+            key={product.id}
+            type="button"
+            onClick={() => setSelectedId(product.id)}
+            className={`w-full border px-4 py-3 text-left transition ${
+              selectedId === product.id ? "border-[#252321]" : "border-[#CCC5BD] hover:border-[#AFA79E]"
+            } ${inactive ? "bg-[#F0EEE9]" : ""}`}
+          >
+            <span className="block font-serif text-lg">{product.nombre}</span>
+            <span className="mt-1 block font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+              {formatCurrency(effectivePrice(product))}
+            </span>
+            {inactive && (
+              <span className="mt-2 block font-sans text-[8pt] uppercase tracking-[0.16em] text-[#9A3F35]">
+                Dado de baja
+              </span>
+            )}
+          </button>
+        ))}
+        {!products.length && (
+          <p className="border border-[#CCC5BD] p-4 font-serif text-base leading-6 text-[#5F5A55]">
+            Sin productos en esta seccion.
+          </p>
+        )}
+      </div>
+    </section>
   );
 }

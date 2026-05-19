@@ -11,6 +11,8 @@ create table if not exists public.productos (
   precio_oferta numeric(12, 2) check (precio_oferta is null or precio_oferta >= 0),
   stock_quantity int4 not null default 0 check (stock_quantity >= 0),
   activo boolean not null default true,
+  talles text not null default '',
+  medidas text not null default '',
   imagenes jsonb not null default '[]'::jsonb,
   categoria_id int8 not null references public.categorias(id) on update cascade on delete restrict,
   created_at timestamptz not null default now(),
@@ -32,27 +34,51 @@ create table if not exists public.pedidos (
   total numeric(12, 2) not null check (total >= 0),
   subtotal numeric(12, 2) not null default 0 check (subtotal >= 0),
   shipping_cost numeric(12, 2) not null default 0 check (shipping_cost >= 0),
+  card_surcharge numeric(12, 2) not null default 0 check (card_surcharge >= 0),
+  tax_condition text not null default 'exento',
+  tax_rate numeric(6, 4) not null default 0 check (tax_rate >= 0),
+  tax_amount numeric(12, 2) not null default 0 check (tax_amount >= 0),
   delivery_method text not null default 'retiro',
+  delivery_region text not null default '',
   payment_method text not null default 'tarjeta_demo',
+  payment_provider text,
+  payment_preference_id text,
+  payment_id text,
+  payment_status text,
+  checkout_url text,
   status_pago text not null default 'pendiente',
   items jsonb not null default '[]'::jsonb,
   customer_name text,
   customer_company text,
   customer_email text,
   customer_address text,
+  paid_at timestamptz,
   created_at timestamptz not null default now()
 );
 
 alter table public.pedidos add column if not exists subtotal numeric(12, 2) not null default 0 check (subtotal >= 0);
 alter table public.pedidos add column if not exists shipping_cost numeric(12, 2) not null default 0 check (shipping_cost >= 0);
+alter table public.pedidos add column if not exists card_surcharge numeric(12, 2) not null default 0 check (card_surcharge >= 0);
+alter table public.pedidos add column if not exists tax_condition text not null default 'exento';
+alter table public.pedidos add column if not exists tax_rate numeric(6, 4) not null default 0 check (tax_rate >= 0);
+alter table public.pedidos add column if not exists tax_amount numeric(12, 2) not null default 0 check (tax_amount >= 0);
 alter table public.pedidos add column if not exists delivery_method text not null default 'retiro';
+alter table public.pedidos add column if not exists delivery_region text not null default '';
 alter table public.pedidos add column if not exists payment_method text not null default 'tarjeta_demo';
+alter table public.pedidos add column if not exists payment_provider text;
+alter table public.pedidos add column if not exists payment_preference_id text;
+alter table public.pedidos add column if not exists payment_id text;
+alter table public.pedidos add column if not exists payment_status text;
+alter table public.pedidos add column if not exists checkout_url text;
 alter table public.pedidos add column if not exists items jsonb not null default '[]'::jsonb;
 alter table public.pedidos add column if not exists customer_name text;
 alter table public.pedidos add column if not exists customer_company text;
 alter table public.pedidos add column if not exists customer_email text;
 alter table public.pedidos add column if not exists customer_address text;
+alter table public.pedidos add column if not exists paid_at timestamptz;
 alter table public.productos add column if not exists activo boolean not null default true;
+alter table public.productos add column if not exists talles text not null default '';
+alter table public.productos add column if not exists medidas text not null default '';
 
 create or replace function public.is_admin()
 returns boolean
@@ -157,7 +183,9 @@ values
   ('social_facebook', 'https://facebook.com/nomadeproject'),
   ('about_title', 'Acerca de Nomade'),
   ('about_content', 'Nomade nace como una seleccion de objetos con oficio, materia y pausa. Cada pieza se elige para acompanar proyectos que buscan belleza cotidiana sin exceso.'),
-  ('about_image', 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=1200&q=85')
+  ('about_image', 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=1200&q=85'),
+  ('tax_condition', 'exento'),
+  ('tax_percent', '19')
 on conflict (clave) do nothing;
 
 insert into storage.buckets (id, name, public)

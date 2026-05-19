@@ -13,7 +13,15 @@ const emptyOrderForm = {
   payment_method: "tarjeta_demo",
   subtotal: 0,
   shipping_cost: 0,
+  card_surcharge: 0,
+  tax_amount: 0,
   total: 0,
+  delivery_region: "",
+  payment_provider: "",
+  payment_id: "",
+  payment_status: "",
+  checkout_url: "",
+  paid_at: "",
   customer_name: "",
   customer_company: "",
   customer_email: "",
@@ -25,6 +33,8 @@ export default function AdminOrders() {
   const [authReady, setAuthReady] = useState(!hasSupabaseConfig);
   const [loginForm, setLoginForm] = useState(emptyLogin);
   const [orders, setOrders] = useState([]);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [form, setForm] = useState(emptyOrderForm);
   const [loading, setLoading] = useState(true);
@@ -34,6 +44,7 @@ export default function AdminOrders() {
     () => orders.find((order) => order.id === selectedId),
     [orders, selectedId]
   );
+  const visibleOrders = useMemo(() => filterOrdersByDateRange(orders, dateFrom, dateTo), [orders, dateFrom, dateTo]);
 
   useEffect(() => {
     if (!hasSupabaseConfig) return;
@@ -72,7 +83,7 @@ export default function AdminOrders() {
       const { data, error } = await supabase
         .from("pedidos")
         .select(
-          "id,total,subtotal,shipping_cost,delivery_method,payment_method,status_pago,items,customer_name,customer_company,customer_email,customer_address,created_at"
+          "id,total,subtotal,shipping_cost,card_surcharge,tax_amount,delivery_method,delivery_region,payment_method,payment_provider,payment_id,payment_status,checkout_url,status_pago,items,customer_name,customer_company,customer_email,customer_address,paid_at,created_at"
         )
         .order("created_at", { ascending: false });
 
@@ -101,7 +112,15 @@ export default function AdminOrders() {
       payment_method: selectedOrder.payment_method ?? "tarjeta_demo",
       subtotal: selectedOrder.subtotal ?? 0,
       shipping_cost: selectedOrder.shipping_cost ?? 0,
+      card_surcharge: selectedOrder.card_surcharge ?? 0,
+      tax_amount: selectedOrder.tax_amount ?? 0,
       total: selectedOrder.total ?? 0,
+      delivery_region: selectedOrder.delivery_region ?? "",
+      payment_provider: selectedOrder.payment_provider ?? "",
+      payment_id: selectedOrder.payment_id ?? "",
+      payment_status: selectedOrder.payment_status ?? "",
+      checkout_url: selectedOrder.checkout_url ?? "",
+      paid_at: selectedOrder.paid_at ? selectedOrder.paid_at.slice(0, 16) : "",
       customer_name: selectedOrder.customer_name ?? "",
       customer_company: selectedOrder.customer_company ?? "",
       customer_email: selectedOrder.customer_email ?? "",
@@ -145,7 +164,15 @@ export default function AdminOrders() {
       payment_method: form.payment_method.trim(),
       subtotal: Number(form.subtotal),
       shipping_cost: Number(form.shipping_cost),
+      card_surcharge: Number(form.card_surcharge),
+      tax_amount: Number(form.tax_amount),
       total: Number(form.total),
+      delivery_region: form.delivery_region.trim(),
+      payment_provider: form.payment_provider.trim(),
+      payment_id: form.payment_id.trim(),
+      payment_status: form.payment_status.trim(),
+      checkout_url: form.checkout_url.trim(),
+      paid_at: form.paid_at ? new Date(form.paid_at).toISOString() : null,
       customer_name: form.customer_name.trim(),
       customer_company: form.customer_company.trim(),
       customer_email: form.customer_email.trim(),
@@ -294,8 +321,16 @@ export default function AdminOrders() {
           <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Seleccionar pedido
           </p>
+          <div className="mt-5 grid gap-3">
+            <Field label="Fecha desde">
+              <input type="date" value={dateFrom} onChange={(event) => setDateFrom(event.target.value)} className="input" />
+            </Field>
+            <Field label="Fecha hasta">
+              <input type="date" value={dateTo} onChange={(event) => setDateTo(event.target.value)} className="input" />
+            </Field>
+          </div>
           <div className="quiet-scrollbar mt-5 max-h-[640px] space-y-2 overflow-auto pr-2">
-            {orders.map((order) => (
+            {visibleOrders.map((order) => (
               <button
                 key={order.id}
                 type="button"
@@ -310,7 +345,7 @@ export default function AdminOrders() {
                 </span>
               </button>
             ))}
-            {!orders.length && (
+            {!visibleOrders.length && (
               <p className="border border-[#CCC5BD] p-5 font-serif text-lg leading-7 text-[#5F5A55]">
                 No hay pedidos registrados.
               </p>
@@ -335,7 +370,8 @@ export default function AdminOrders() {
                 <Field label="Estado pago">
                   <select name="status_pago" value={form.status_pago} onChange={updateForm} className="input">
                     <option value="pagado">pagado</option>
-                    <option value="pendiente">pendiente</option>
+                    <option value="pendiente_pago">pendiente_pago</option>
+                    <option value="rechazado">rechazado</option>
                     <option value="anulado">anulado</option>
                   </select>
                 </Field>
@@ -394,9 +430,80 @@ export default function AdminOrders() {
                     className="input"
                   />
                 </Field>
+                <Field label="Recargo tarjeta">
+                  <input
+                    name="card_surcharge"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.card_surcharge}
+                    onChange={updateForm}
+                    className="input"
+                  />
+                </Field>
+                <Field label="IVA">
+                  <input
+                    name="tax_amount"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.tax_amount}
+                    onChange={updateForm}
+                    className="input"
+                  />
+                </Field>
               </div>
 
               <div className="grid gap-5 md:grid-cols-2">
+                <Field label="Region entrega">
+                  <input
+                    name="delivery_region"
+                    value={form.delivery_region}
+                    onChange={updateForm}
+                    className="input"
+                  />
+                </Field>
+                <Field label="Proveedor pago">
+                  <input
+                    name="payment_provider"
+                    value={form.payment_provider}
+                    onChange={updateForm}
+                    className="input"
+                  />
+                </Field>
+                <Field label="ID pago">
+                  <input
+                    name="payment_id"
+                    value={form.payment_id}
+                    onChange={updateForm}
+                    className="input"
+                  />
+                </Field>
+                <Field label="Estado proveedor">
+                  <input
+                    name="payment_status"
+                    value={form.payment_status}
+                    onChange={updateForm}
+                    className="input"
+                  />
+                </Field>
+                <Field label="URL checkout">
+                  <input
+                    name="checkout_url"
+                    value={form.checkout_url}
+                    onChange={updateForm}
+                    className="input"
+                  />
+                </Field>
+                <Field label="Fecha pago">
+                  <input
+                    name="paid_at"
+                    type="datetime-local"
+                    value={form.paid_at}
+                    onChange={updateForm}
+                    className="input"
+                  />
+                </Field>
                 <Field label="Comprador">
                   <input
                     name="customer_name"
@@ -522,4 +629,14 @@ function formatDate(value) {
     hour: "2-digit",
     minute: "2-digit"
   }).format(new Date(value));
+}
+
+function filterOrdersByDateRange(orders, from, to) {
+  if (!from && !to) return orders;
+  const fromTime = from ? new Date(`${from}T00:00:00`).getTime() : Number.NEGATIVE_INFINITY;
+  const toTime = to ? new Date(`${to}T23:59:59`).getTime() : Number.POSITIVE_INFINITY;
+  return orders.filter((order) => {
+    const time = new Date(order.created_at).getTime();
+    return time >= fromTime && time <= toTime;
+  });
 }

@@ -15,7 +15,7 @@ export default function Navbar({ categorias, logoUrl }) {
               <img
                 src={logoUrl}
                 alt="Nomade Project"
-                className="h-auto max-h-16 max-w-[58vw] object-contain md:max-h-20 md:max-w-[520px]"
+                className="h-auto max-h-24 max-w-[64vw] object-contain md:max-h-32 md:max-w-[680px]"
               />
             ) : (
               <span className="font-serif text-4xl text-[#252321]">Nomade Project</span>

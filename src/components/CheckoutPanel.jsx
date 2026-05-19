@@ -1,16 +1,19 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { CreditCard, MapPin, PackageCheck, Truck } from "lucide-react";
 import { useCart } from "../context/CartContext.jsx";
+import { calculateOrderTotals, getRegionCost, PAYMENT_MODE, paymentOutcomes, shippingRegions } from "../lib/commerce.js";
+import { loadBranding } from "../lib/branding.js";
 import { appendDemoOrder } from "../lib/demoStore.js";
 import { hasSupabaseConfig, supabase } from "../lib/supabase.js";
 import { effectivePrice, formatCurrency } from "../utils/format.js";
 
-const SHIPPING_COST = 18;
-
 export default function CheckoutPanel() {
   const { cart, totals, clearCart } = useCart();
+  const [branding, setBranding] = useState({ tax_condition: "exento", tax_percent: "19" });
   const [deliveryMethod, setDeliveryMethod] = useState("retiro");
-  const [paymentMethod, setPaymentMethod] = useState("tarjeta_demo");
+  const [region, setRegion] = useState("metropolitana");
+  const [paymentMethod, setPaymentMethod] = useState("transferencia");
+  const [paymentOutcome, setPaymentOutcome] = useState("pagado");
   const [customer, setCustomer] = useState({
     nombre: "",
     empresa: "",
@@ -20,8 +23,17 @@ export default function CheckoutPanel() {
   const [status, setStatus] = useState("");
   const [isPaying, setIsPaying] = useState(false);
 
-  const shippingCost = deliveryMethod === "domicilio" ? SHIPPING_COST : 0;
-  const grandTotal = totals.amount + shippingCost;
+  useEffect(() => {
+    loadBranding().then((value) => setBranding(value));
+  }, []);
+
+  const shippingCost = deliveryMethod === "domicilio" ? getRegionCost(region) : 0;
+  const computed = calculateOrderTotals({
+    subtotal: totals.amount,
+    shippingCost,
+    paymentMethod,
+    branding
+  });
   const canPay = cart.length > 0 && customer.nombre.trim() && customer.email.trim();
   const needsAddress = deliveryMethod === "domicilio";
   const addressReady = !needsAddress || customer.direccion.trim();
@@ -55,46 +67,76 @@ export default function CheckoutPanel() {
       items: summary,
       subtotal: totals.amount,
       shipping_cost: shippingCost,
-      total: grandTotal,
+      card_surcharge: computed.cardSurcharge,
+      tax_condition: branding.tax_condition ?? "exento",
+      tax_rate: computed.taxRate,
+      tax_amount: computed.taxAmount,
+      total: computed.total,
       delivery_method: deliveryMethod,
+      delivery_region: deliveryMethod === "domicilio" ? region : "",
       payment_method: paymentMethod,
-      status_pago: "pagado",
+      payment_provider: PAYMENT_MODE === "mercadopago" ? "mercadopago" : "demo",
+      payment_status: PAYMENT_MODE === "mercadopago" ? "pending" : paymentOutcome,
+      status_pago: PAYMENT_MODE === "mercadopago" ? "pendiente_pago" : paymentOutcome,
       customer_name: customer.nombre.trim(),
       customer_company: customer.empresa.trim(),
       customer_email: customer.email.trim(),
       customer_address: customer.direccion.trim(),
+      paid_at: paymentOutcome === "pagado" ? new Date().toISOString() : null,
       created_at: new Date().toISOString()
     };
+
+    if (PAYMENT_MODE === "mercadopago") {
+      await startMercadoPagoOrder(order);
+      return;
+    }
 
     if (!hasSupabaseConfig) {
       appendDemoOrder(order);
       clearCart();
-      setStatus(`Pago aprobado. Orden ${order.id.slice(0, 8).toUpperCase()} confirmada.`);
+      setStatus(buildDemoStatus(order));
       setIsPaying(false);
       return;
     }
 
-    const { error } = await supabase.from("pedidos").insert({
-      total: order.total,
-      status_pago: order.status_pago,
-      items: order.items,
-      subtotal: order.subtotal,
-      shipping_cost: order.shipping_cost,
-      delivery_method: order.delivery_method,
-      payment_method: order.payment_method,
-      customer_name: order.customer_name,
-      customer_company: order.customer_company,
-      customer_email: order.customer_email,
-      customer_address: order.customer_address
-    });
+    const { error } = await supabase.from("pedidos").insert(toOrderInsert(order));
 
     if (error) {
       setStatus(error.message);
     } else {
       clearCart();
-      setStatus("Pago aprobado y pedido registrado.");
+      setStatus(buildDemoStatus(order));
     }
     setIsPaying(false);
+  };
+
+  const startMercadoPagoOrder = async (order) => {
+    if (!hasSupabaseConfig) {
+      setStatus("Mercado Pago requiere Supabase y variables privadas de Vercel.");
+      setIsPaying(false);
+      return;
+    }
+
+    const { data, error } = await supabase.from("pedidos").insert(toOrderInsert(order)).select("id").single();
+    if (error) {
+      setStatus(error.message);
+      setIsPaying(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/create-payment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: data.id, order: { ...order, id: data.id } })
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "No se pudo iniciar Mercado Pago.");
+      window.location.href = payload.checkoutUrl;
+    } catch (error) {
+      setStatus(error.message);
+      setIsPaying(false);
+    }
   };
 
   return (
@@ -115,66 +157,63 @@ export default function CheckoutPanel() {
           active={deliveryMethod === "domicilio"}
           icon={<Truck size={16} strokeWidth={1.5} />}
           label="Envio a domicilio"
-          detail={`Costo ${formatCurrency(SHIPPING_COST)}`}
+          detail={`Costo segun region desde ${formatCurrency(shippingRegions[0].costo)}`}
           onClick={() => setDeliveryMethod("domicilio")}
         />
       </div>
 
+      {deliveryMethod === "domicilio" && (
+        <select value={region} onChange={(event) => setRegion(event.target.value)} className="input mt-4 text-sm">
+          {shippingRegions.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.nombre} / {formatCurrency(item.costo)}
+            </option>
+          ))}
+        </select>
+      )}
+
       <div className="mt-6 space-y-3">
-        <input
-          name="nombre"
-          value={customer.nombre}
-          onChange={updateCustomer}
-          placeholder="Nombre comprador"
-          className="input text-sm"
-        />
-        <input
-          name="empresa"
-          value={customer.empresa}
-          onChange={updateCustomer}
-          placeholder="Empresa"
-          className="input text-sm"
-        />
-        <input
-          name="email"
-          type="email"
-          value={customer.email}
-          onChange={updateCustomer}
-          placeholder="Email"
-          className="input text-sm"
-        />
+        <input name="nombre" value={customer.nombre} onChange={updateCustomer} placeholder="Nombre comprador" className="input text-sm" />
+        <input name="empresa" value={customer.empresa} onChange={updateCustomer} placeholder="Empresa" className="input text-sm" />
+        <input name="email" type="email" value={customer.email} onChange={updateCustomer} placeholder="Email" className="input text-sm" />
         {deliveryMethod === "domicilio" && (
-          <input
-            name="direccion"
-            value={customer.direccion}
-            onChange={updateCustomer}
-            placeholder="Direccion de envio"
-            className="input text-sm"
-          />
+          <input name="direccion" value={customer.direccion} onChange={updateCustomer} placeholder="Direccion de envio" className="input text-sm" />
         )}
       </div>
 
       <div className="mt-6 grid gap-3">
         <ChoiceButton
-          active={paymentMethod === "tarjeta_demo"}
+          active={paymentMethod === "tarjeta_credito"}
           icon={<CreditCard size={16} strokeWidth={1.5} />}
-          label="Pago tarjeta demo"
-          detail="Aprueba inmediatamente"
-          onClick={() => setPaymentMethod("tarjeta_demo")}
+          label="Tarjeta de credito"
+          detail="Recargo operacional 2%"
+          onClick={() => setPaymentMethod("tarjeta_credito")}
         />
         <ChoiceButton
           active={paymentMethod === "transferencia"}
           icon={<MapPin size={16} strokeWidth={1.5} />}
           label="Transferencia"
-          detail="Registra pago como aprobado para demo"
+          detail="Sin recargo de tarjeta"
           onClick={() => setPaymentMethod("transferencia")}
         />
       </div>
 
+      {PAYMENT_MODE !== "mercadopago" && (
+        <select value={paymentOutcome} onChange={(event) => setPaymentOutcome(event.target.value)} className="input mt-4 text-sm">
+          {paymentOutcomes.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.nombre}
+            </option>
+          ))}
+        </select>
+      )}
+
       <div className="mt-7 space-y-3 border-t border-[#CCC5BD] pt-5 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
         <Line label="Subtotal" value={formatCurrency(totals.amount)} />
         <Line label="Envio" value={formatCurrency(shippingCost)} />
-        <Line label="Total a pagar" value={formatCurrency(grandTotal)} strong />
+        <Line label="Recargo tarjeta" value={formatCurrency(computed.cardSurcharge)} />
+        <Line label={`IVA ${Math.round(computed.taxRate * 100)}%`} value={formatCurrency(computed.taxAmount)} />
+        <Line label="Total a pagar" value={formatCurrency(computed.total)} strong />
       </div>
 
       <button
@@ -183,7 +222,7 @@ export default function CheckoutPanel() {
         disabled={!cart.length || isPaying}
         className="mt-6 w-full border border-[#252321] px-4 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6] disabled:cursor-not-allowed disabled:border-[#CCC5BD] disabled:text-[#6B655F]"
       >
-        {isPaying ? "Procesando" : "Confirmar y pagar"}
+        {isPaying ? "Procesando" : PAYMENT_MODE === "mercadopago" ? "Pagar con Mercado Pago" : "Confirmar pedido demo"}
       </button>
 
       {status && <p className="mt-5 font-serif text-lg leading-7 text-[#5F5A55]">{status}</p>}
@@ -218,4 +257,34 @@ function Line({ label, value, strong = false }) {
       <span className={strong ? "text-[#252321]" : ""}>{value}</span>
     </div>
   );
+}
+
+function buildDemoStatus(order) {
+  if (order.status_pago === "pagado") return `Pago aprobado. Pedido ${order.id.slice(0, 8).toUpperCase()} confirmado.`;
+  if (order.status_pago === "rechazado") return "Pedido registrado como rechazado para prueba.";
+  return "Pedido registrado como pendiente de pago para prueba.";
+}
+
+function toOrderInsert(order) {
+  return {
+    total: order.total,
+    status_pago: order.status_pago,
+    items: order.items,
+    subtotal: order.subtotal,
+    shipping_cost: order.shipping_cost,
+    card_surcharge: order.card_surcharge,
+    tax_condition: order.tax_condition,
+    tax_rate: order.tax_rate,
+    tax_amount: order.tax_amount,
+    delivery_method: order.delivery_method,
+    delivery_region: order.delivery_region,
+    payment_method: order.payment_method,
+    payment_provider: order.payment_provider,
+    payment_status: order.payment_status,
+    customer_name: order.customer_name,
+    customer_company: order.customer_company,
+    customer_email: order.customer_email,
+    customer_address: order.customer_address,
+    paid_at: order.paid_at
+  };
 }

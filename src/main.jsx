@@ -6,6 +6,8 @@ import Admin from "./pages/Admin.jsx";
 import AdminOrders from "./pages/AdminOrders.jsx";
 import About from "./pages/About.jsx";
 import Contact from "./pages/Contact.jsx";
+import ProductDetail from "./pages/ProductDetail.jsx";
+import PaymentResult from "./pages/PaymentResult.jsx";
 import AppErrorBoundary from "./components/AppErrorBoundary.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import "./styles.css";
@@ -32,6 +34,8 @@ try {
           <CartProvider>
             <Routes>
               <Route path="/" element={<App />} />
+              <Route path="/producto/:id" element={<ProductDetail />} />
+              <Route path="/pago/:status" element={<PaymentResult />} />
               <Route path="/contacto" element={<Contact />} />
               <Route path="/acerca" element={<About />} />
               <Route path="/admin" element={<Admin />} />
