@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, XCircle } from "lucide-react";
+import PageHeader from "../components/PageHeader.jsx";
 
 const resultContent = {
   exito: {
@@ -29,16 +30,9 @@ export default function PaymentResult() {
   const Icon = content.icon;
 
   return (
-    <main className="min-h-screen bg-[#FAF9F6] px-5 py-8 text-[#252321] md:px-10">
-      <Link
-        to="/"
-        className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
-      >
-        <ArrowLeft size={15} strokeWidth={1.5} />
-        Catalogo
-      </Link>
-
-      <section className="mx-auto mt-20 max-w-2xl border border-[#CCC5BD] p-8 md:p-12">
+    <main className="min-h-screen bg-[#FAF9F6] text-[#252321]">
+      <PageHeader backLabel="Catalogo" />
+      <section className="mx-auto mt-14 max-w-2xl border border-[#CCC5BD] p-8 md:p-12">
         <Icon size={34} strokeWidth={1.4} />
         <p className="mt-8 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
           {content.eyebrow}

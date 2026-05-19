@@ -27,6 +27,14 @@ const emptyForm = {
   categoria_id: "",
   talles: "",
   medidas: "",
+  slug: "",
+  sku: "",
+  material: "",
+  origen: "",
+  color: "",
+  peso: "",
+  cuidados: "",
+  tiempo_despacho: "",
   es_oferta: false,
   es_novedad: false
 };
@@ -42,7 +50,14 @@ const emptyBranding = {
   about_content: "",
   about_image: "",
   tax_condition: "exento",
-  tax_percent: "19"
+  tax_percent: "19",
+  status_banner: "",
+  reservation_minutes: "60",
+  policy_returns: "",
+  policy_shipping: "",
+  policy_terms: "",
+  policy_privacy: "",
+  policy_faq: ""
 };
 
 export default function Admin() {
@@ -82,6 +97,14 @@ export default function Admin() {
       Number(form.categoria_id) !== Number(selectedProduct.categoria_id) ||
       form.talles !== (selectedProduct.talles ?? "") ||
       form.medidas !== (selectedProduct.medidas ?? "") ||
+      form.slug !== (selectedProduct.slug ?? "") ||
+      form.sku !== (selectedProduct.sku ?? "") ||
+      form.material !== (selectedProduct.material ?? "") ||
+      form.origen !== (selectedProduct.origen ?? "") ||
+      form.color !== (selectedProduct.color ?? "") ||
+      form.peso !== (selectedProduct.peso ?? "") ||
+      form.cuidados !== (selectedProduct.cuidados ?? "") ||
+      form.tiempo_despacho !== (selectedProduct.tiempo_despacho ?? "") ||
       form.es_oferta !== (selectedProduct.es_oferta === true) ||
       form.es_novedad !== (selectedProduct.es_novedad === true)
     );
@@ -179,6 +202,14 @@ export default function Admin() {
       categoria_id: selectedProduct.categoria_id ?? "",
       talles: selectedProduct.talles ?? "",
       medidas: selectedProduct.medidas ?? "",
+      slug: selectedProduct.slug ?? "",
+      sku: selectedProduct.sku ?? "",
+      material: selectedProduct.material ?? "",
+      origen: selectedProduct.origen ?? "",
+      color: selectedProduct.color ?? "",
+      peso: selectedProduct.peso ?? "",
+      cuidados: selectedProduct.cuidados ?? "",
+      tiempo_despacho: selectedProduct.tiempo_despacho ?? "",
       es_oferta: selectedProduct.es_oferta === true,
       es_novedad: selectedProduct.es_novedad === true
     });
@@ -361,6 +392,14 @@ export default function Admin() {
       categoria_id: categoryId,
       talles: form.talles.trim(),
       medidas: form.medidas.trim(),
+      slug: form.slug.trim(),
+      sku: form.sku.trim(),
+      material: form.material.trim(),
+      origen: form.origen.trim(),
+      color: form.color.trim(),
+      peso: form.peso.trim(),
+      cuidados: form.cuidados.trim(),
+      tiempo_despacho: form.tiempo_despacho.trim(),
       es_oferta: form.es_oferta === true,
       es_novedad: form.es_novedad === true
     };
@@ -408,6 +447,14 @@ export default function Admin() {
       es_novedad: false,
       talles: "",
       medidas: "",
+      slug: "",
+      sku: "",
+      material: "",
+      origen: "",
+      color: "",
+      peso: "",
+      cuidados: "",
+      tiempo_despacho: "",
       imagenes: []
     };
 
@@ -805,6 +852,39 @@ export default function Admin() {
                   className="input"
                 />
               </Field>
+              <Field label="Banner operativo">
+                <input
+                  name="status_banner"
+                  value={brandingForm.status_banner}
+                  onChange={updateBrandingForm}
+                  className="input"
+                />
+              </Field>
+              <Field label="Minutos reserva stock">
+                <input
+                  name="reservation_minutes"
+                  type="number"
+                  min="15"
+                  value={brandingForm.reservation_minutes}
+                  onChange={updateBrandingForm}
+                  className="input"
+                />
+              </Field>
+              <Field label="Cambios y devoluciones">
+                <textarea name="policy_returns" value={brandingForm.policy_returns} onChange={updateBrandingForm} rows="4" className="input resize-none leading-7" />
+              </Field>
+              <Field label="Despacho y retiro">
+                <textarea name="policy_shipping" value={brandingForm.policy_shipping} onChange={updateBrandingForm} rows="4" className="input resize-none leading-7" />
+              </Field>
+              <Field label="Terminos y condiciones">
+                <textarea name="policy_terms" value={brandingForm.policy_terms} onChange={updateBrandingForm} rows="4" className="input resize-none leading-7" />
+              </Field>
+              <Field label="Politica de privacidad">
+                <textarea name="policy_privacy" value={brandingForm.policy_privacy} onChange={updateBrandingForm} rows="4" className="input resize-none leading-7" />
+              </Field>
+              <Field label="Preguntas frecuentes">
+                <textarea name="policy_faq" value={brandingForm.policy_faq} onChange={updateBrandingForm} rows="4" className="input resize-none leading-7" />
+              </Field>
               <div>
                 <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
                   Imagen acerca
@@ -932,6 +1012,27 @@ export default function Admin() {
                     className="input"
                   />
                 </Field>
+                <Field label="URL limpia">
+                  <input name="slug" value={form.slug} onChange={updateForm} placeholder="banano-color-naranja" className="input" />
+                </Field>
+                <Field label="SKU">
+                  <input name="sku" value={form.sku} onChange={updateForm} className="input" />
+                </Field>
+                <Field label="Material">
+                  <input name="material" value={form.material} onChange={updateForm} className="input" />
+                </Field>
+                <Field label="Origen">
+                  <input name="origen" value={form.origen} onChange={updateForm} className="input" />
+                </Field>
+                <Field label="Color">
+                  <input name="color" value={form.color} onChange={updateForm} className="input" />
+                </Field>
+                <Field label="Peso">
+                  <input name="peso" value={form.peso} onChange={updateForm} placeholder="1.2 kg" className="input" />
+                </Field>
+                <Field label="Tiempo despacho">
+                  <input name="tiempo_despacho" value={form.tiempo_despacho} onChange={updateForm} placeholder="3 a 5 dias habiles" className="input" />
+                </Field>
                 <label className="flex items-center gap-3 border border-[#CCC5BD] px-4 py-3">
                   <input
                     name="es_oferta"
@@ -964,6 +1065,15 @@ export default function Admin() {
                   value={form.descripcion}
                   onChange={updateForm}
                   rows="7"
+                  className="input resize-none leading-7"
+                />
+              </Field>
+              <Field label="Cuidados">
+                <textarea
+                  name="cuidados"
+                  value={form.cuidados}
+                  onChange={updateForm}
+                  rows="4"
                   className="input resize-none leading-7"
                 />
               </Field>
@@ -1189,6 +1299,20 @@ function generateSalesPdf(dashboard) {
   reportWindow.print();
 }
 
+function downloadSalesCsv(dashboard) {
+  const rows = [
+    ["Categoria", "Producto", "Unidades", "Ventas"],
+    ...dashboard.productRows.map((row) => [row.categoryName, row.name, row.units, row.revenue])
+  ];
+  const csv = rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "ventas-nomade.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -1293,14 +1417,23 @@ function SalesReport({ dashboard }) {
           </p>
           <h2 className="mt-3 font-serif text-3xl">Ventas por producto</h2>
         </div>
-        <button
-          type="button"
-          onClick={() => generateSalesPdf(dashboard)}
-          className="inline-flex items-center justify-center gap-3 border border-[#252321] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
-        >
-          <FileText size={15} strokeWidth={1.5} />
-          Generar PDF
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => generateSalesPdf(dashboard)}
+            className="inline-flex items-center justify-center gap-3 border border-[#252321] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
+          >
+            <FileText size={15} strokeWidth={1.5} />
+            Generar PDF
+          </button>
+          <button
+            type="button"
+            onClick={() => downloadSalesCsv(dashboard)}
+            className="inline-flex items-center justify-center gap-3 border border-[#CCC5BD] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:border-[#252321]"
+          >
+            Exportar CSV
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">

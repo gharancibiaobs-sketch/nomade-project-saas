@@ -4,6 +4,7 @@ import { effectivePrice } from "../utils/format.js";
 
 const CartContext = createContext(null);
 const CART_KEY = "nomade-cart";
+const FAVORITES_KEY = "nomade-favorites";
 
 function readStoredCart() {
   try {
@@ -23,6 +24,7 @@ function writeStoredCart(cart) {
 
 export function CartProvider({ children }) {
   const [cart, setCart] = useState(readStoredCart);
+  const [favorites, setFavorites] = useState(() => readStoredList(FAVORITES_KEY));
   const [categoriaActiva, setCategoriaActiva] = useState("todos");
 
   useEffect(() => {
@@ -59,6 +61,18 @@ export function CartProvider({ children }) {
 
   const clearCart = () => setCart([]);
 
+  useEffect(() => {
+    writeStoredList(FAVORITES_KEY, favorites);
+  }, [favorites]);
+
+  const toggleFavorite = (productId) => {
+    setFavorites((current) =>
+      current.includes(productId) ? current.filter((id) => id !== productId) : [...current, productId]
+    );
+  };
+
+  const isFavorite = (productId) => favorites.includes(productId);
+
   const totals = useMemo(() => {
     return cart.reduce(
       (acc, item) => {
@@ -78,11 +92,30 @@ export function CartProvider({ children }) {
     removeFromCart,
     updateQuantity,
     clearCart,
+    favorites,
+    toggleFavorite,
+    isFavorite,
     categoriaActiva,
     setCategoriaActiva
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+}
+
+function readStoredList(key) {
+  try {
+    return JSON.parse(window.localStorage.getItem(key)) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+function writeStoredList(key, value) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Non-critical local preference.
+  }
 }
 
 export function useCart() {

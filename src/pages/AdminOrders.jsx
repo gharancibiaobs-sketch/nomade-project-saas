@@ -10,6 +10,7 @@ import { formatCurrency } from "../utils/format.js";
 const emptyLogin = { email: "", password: "" };
 const emptyOrderForm = {
   status_pago: "pagado",
+  estado_logistico: "nuevo",
   delivery_method: "retiro",
   payment_method: "tarjeta_demo",
   subtotal: 0,
@@ -49,6 +50,7 @@ export default function AdminOrders() {
     if (!selectedOrder) return false;
     return (
       form.status_pago !== (selectedOrder.status_pago ?? "pagado") ||
+      form.estado_logistico !== (selectedOrder.estado_logistico ?? "nuevo") ||
       form.delivery_method !== (selectedOrder.delivery_method ?? "retiro") ||
       form.payment_method !== (selectedOrder.payment_method ?? "tarjeta_demo") ||
       Number(form.subtotal || 0) !== Number(selectedOrder.subtotal ?? 0) ||
@@ -106,7 +108,7 @@ export default function AdminOrders() {
       const { data, error } = await supabase
         .from("pedidos")
         .select(
-          "id,total,subtotal,shipping_cost,card_surcharge,tax_amount,delivery_method,delivery_region,payment_method,payment_provider,payment_id,payment_status,checkout_url,status_pago,items,customer_name,customer_company,customer_email,customer_address,paid_at,created_at"
+          "id,total,subtotal,discount_code,discount_amount,shipping_cost,card_surcharge,tax_amount,delivery_method,delivery_region,payment_method,payment_provider,payment_id,payment_status,checkout_url,status_pago,estado_logistico,items,customer_name,customer_company,customer_email,customer_address,paid_at,created_at"
         )
         .order("created_at", { ascending: false });
 
@@ -131,6 +133,7 @@ export default function AdminOrders() {
 
     setForm({
       status_pago: selectedOrder.status_pago ?? "pagado",
+      estado_logistico: selectedOrder.estado_logistico ?? "nuevo",
       delivery_method: selectedOrder.delivery_method ?? "retiro",
       payment_method: selectedOrder.payment_method ?? "tarjeta_demo",
       subtotal: selectedOrder.subtotal ?? 0,
@@ -183,6 +186,7 @@ export default function AdminOrders() {
 
     const payload = {
       status_pago: form.status_pago,
+      estado_logistico: form.estado_logistico,
       delivery_method: form.delivery_method,
       payment_method: form.payment_method.trim(),
       subtotal: Number(form.subtotal),
@@ -350,6 +354,7 @@ export default function AdminOrders() {
               </p>
             )}
           </div>
+          <CustomerSummary orders={orders} />
         </aside>
 
         {selectedOrder ? (
@@ -383,6 +388,16 @@ export default function AdminOrders() {
                   >
                     <option value="retiro">retiro</option>
                     <option value="domicilio">domicilio</option>
+                  </select>
+                </Field>
+                <Field label="Estado logistico">
+                  <select name="estado_logistico" value={form.estado_logistico} onChange={updateForm} className="input">
+                    <option value="nuevo">nuevo</option>
+                    <option value="preparando">preparando</option>
+                    <option value="listo_para_retiro">listo_para_retiro</option>
+                    <option value="enviado">enviado</option>
+                    <option value="entregado">entregado</option>
+                    <option value="cerrado">cerrado</option>
                   </select>
                 </Field>
                 <Field label="Metodo pago">
@@ -608,6 +623,43 @@ function OrderItems({ items }) {
             Este pedido no tiene detalle de productos.
           </p>
         )}
+      </div>
+    </section>
+  );
+}
+
+function CustomerSummary({ orders }) {
+  const customers = new Map();
+  orders.forEach((order) => {
+    const key = order.customer_email || order.customer_name;
+    if (!key) return;
+    const current = customers.get(key) ?? {
+      name: order.customer_name,
+      company: order.customer_company,
+      email: order.customer_email,
+      orders: 0,
+      revenue: 0
+    };
+    current.orders += 1;
+    current.revenue += Number(order.total ?? 0);
+    customers.set(key, current);
+  });
+  const rows = [...customers.values()].sort((a, b) => b.revenue - a.revenue).slice(0, 6);
+
+  return (
+    <section className="mt-10 border-t border-[#CCC5BD] pt-6">
+      <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+        Clientes / empresas
+      </p>
+      <div className="mt-4 space-y-3">
+        {rows.map((row) => (
+          <div key={row.email || row.name} className="border border-[#CCC5BD] p-3">
+            <p className="font-serif text-base">{row.company || row.name}</p>
+            <p className="mt-1 font-sans text-[8pt] uppercase tracking-[0.16em] text-[#6B655F]">
+              {row.orders} pedidos / {formatCurrency(row.revenue)}
+            </p>
+          </div>
+        ))}
       </div>
     </section>
   );

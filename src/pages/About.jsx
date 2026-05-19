@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import PageHeader from "../components/PageHeader.jsx";
 import QuietLoader from "../components/QuietLoader.jsx";
 import { loadBranding } from "../lib/branding.js";
 
@@ -20,16 +19,9 @@ export default function About() {
   }
 
   return (
-    <main className="min-h-screen bg-[#FAF9F6] px-5 py-8 text-[#252321] md:px-10">
-      <Link
-        to="/"
-        className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
-      >
-        <ArrowLeft size={15} strokeWidth={1.5} />
-        Volver al catalogo
-      </Link>
-
-      <section className="mx-auto mt-14 grid max-w-6xl gap-12 lg:grid-cols-[0.95fr_1fr] lg:items-center">
+    <main className="min-h-screen bg-[#FAF9F6] text-[#252321]">
+      <PageHeader backLabel="Volver al catalogo" />
+      <section className="mx-auto grid max-w-6xl gap-12 px-5 py-14 md:px-10 lg:grid-cols-[0.95fr_1fr] lg:items-center">
         <div className="group overflow-hidden bg-[#F0EEE9]">
           <img
             src={branding.about_image}

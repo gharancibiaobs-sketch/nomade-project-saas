@@ -1,11 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Eye, ShoppingBag } from "lucide-react";
+import { Eye, Heart, ShoppingBag } from "lucide-react";
 import { useCart } from "../context/CartContext.jsx";
-import { effectivePrice, formatCurrency, firstImage, hasValidOffer } from "../utils/format.js";
+import { effectivePrice, formatCurrency, firstImage, hasValidOffer, productSlug } from "../utils/format.js";
 
 export default function ProductCard({ product }) {
-  const { addToCart } = useCart();
+  const { addToCart, isFavorite, toggleFavorite } = useCart();
   const image = firstImage(product);
   const originalPrice = Number(product.precio_original ?? 0);
   const offerPrice = effectivePrice(product);
@@ -39,6 +39,15 @@ export default function ProductCard({ product }) {
       </div>
 
       <div className="space-y-4">
+        <button
+          type="button"
+          onClick={() => toggleFavorite(product.id)}
+          className="inline-flex items-center gap-2 font-sans text-[8pt] uppercase tracking-[0.16em] text-[#6B655F] transition hover:text-[#252321]"
+          aria-label={isFavorite(product.id) ? `Quitar ${product.nombre} de favoritos` : `Agregar ${product.nombre} a favoritos`}
+        >
+          <Heart size={15} strokeWidth={1.5} fill={isFavorite(product.id) ? "currentColor" : "none"} />
+          {isFavorite(product.id) ? "Seleccionado" : "Seleccionar"}
+        </button>
         <div className="min-w-0">
           <div className="mb-3 flex flex-wrap gap-2 font-sans text-[8pt] uppercase tracking-[0.16em] text-[#6B655F]">
             {product.es_oferta === true && <span>En oferta</span>}
@@ -54,7 +63,7 @@ export default function ProductCard({ product }) {
           )}
         </div>
         <Link
-          to={`/producto/${product.id}`}
+          to={`/producto/${productSlug(product)}`}
           className="inline-flex w-full items-center justify-center gap-2 border border-[#CCC5BD] px-4 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#252321] transition hover:border-[#252321]"
         >
           <Eye size={16} strokeWidth={1.5} />

@@ -1,11 +1,12 @@
 import React from "react";
 import { useEffect, useMemo, useState } from "react";
-import CheckoutPanel from "./components/CheckoutPanel.jsx";
+import { Link } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import ProductCard from "./components/ProductCard.jsx";
 import QuietLoader from "./components/QuietLoader.jsx";
 import { useCart } from "./context/CartContext.jsx";
 import { readDemoCategories, readDemoLogo, readDemoProducts } from "./lib/demoStore.js";
+import { loadBranding } from "./lib/branding.js";
 import { hasSupabaseConfig, supabase } from "./lib/supabase.js";
 import { formatCurrency } from "./utils/format.js";
 
@@ -14,13 +15,16 @@ export default function App() {
   const [categorias, setCategorias] = useState([]);
   const [productos, setProductos] = useState([]);
   const [logoUrl, setLogoUrl] = useState("");
+  const [branding, setBranding] = useState({});
   const [loading, setLoading] = useState(true);
+  const [sortMode, setSortMode] = useState("recientes");
 
   useEffect(() => {
     async function loadShell() {
       if (!hasSupabaseConfig) {
         setCategorias(readDemoCategories().filter((cat) => cat.activo !== false));
         setLogoUrl(readDemoLogo());
+        setBranding(await loadBranding());
         return;
       }
 
@@ -30,6 +34,7 @@ export default function App() {
       ]);
       setCategorias(categoryData ?? []);
       setLogoUrl(logoData?.valor ?? "");
+      setBranding(await loadBranding());
     }
 
     loadShell();
@@ -75,12 +80,12 @@ export default function App() {
         query = query.eq("categoria_id", categoriaActiva);
       }
       const { data } = await query;
-      setProductos(data ?? []);
+      setProductos(sortProducts(data ?? [], sortMode));
       setLoading(false);
     }
 
     loadProducts();
-  }, [categoriaActiva]);
+  }, [categoriaActiva, sortMode]);
 
   const activeCategoryName = useMemo(() => {
     if (categoriaActiva === "todos") return "Coleccion completa";
@@ -91,7 +96,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-[#252321]">
-      <Navbar categorias={categorias} logoUrl={logoUrl} />
+      <Navbar categorias={categorias} logoUrl={logoUrl} bannerText={branding.status_banner} />
 
       <main className="mx-auto grid max-w-7xl gap-14 px-5 py-12 md:px-8 lg:grid-cols-[1fr_320px] lg:px-10 lg:py-16">
         <section>
@@ -104,6 +109,20 @@ export default function App() {
             </h1>
             <p className="mt-7 max-w-2xl font-serif text-xl leading-9 text-[#5F5A55]">
             </p>
+          </div>
+          <div className="mb-10 max-w-xs">
+            <label className="block">
+              <span className="mb-2 block font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+                Ordenar catalogo
+              </span>
+              <select value={sortMode} onChange={(event) => setSortMode(event.target.value)} className="input">
+                <option value="recientes">Mas recientes</option>
+                <option value="precio_asc">Precio menor a mayor</option>
+                <option value="precio_desc">Precio mayor a menor</option>
+                <option value="ofertas">En oferta primero</option>
+                <option value="novedades">Novedades primero</option>
+              </select>
+            </label>
           </div>
 
           {loading ? (
@@ -179,7 +198,12 @@ export default function App() {
           </div>
           {cart.length > 0 && (
             <>
-              <CheckoutPanel />
+              <Link
+                to="/checkout"
+                className="mt-8 inline-flex w-full justify-center border border-[#252321] bg-[#252321] px-4 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#FAF9F6] transition hover:bg-transparent hover:text-[#252321]"
+              >
+                Ir al checkout
+              </Link>
               <button
                 type="button"
                 onClick={clearCart}
@@ -193,4 +217,13 @@ export default function App() {
       </main>
     </div>
   );
+}
+
+function sortProducts(products, mode) {
+  const sorted = [...products];
+  if (mode === "precio_asc") return sorted.sort((a, b) => Number(a.precio_original ?? 0) - Number(b.precio_original ?? 0));
+  if (mode === "precio_desc") return sorted.sort((a, b) => Number(b.precio_original ?? 0) - Number(a.precio_original ?? 0));
+  if (mode === "ofertas") return sorted.sort((a, b) => Number(b.es_oferta === true) - Number(a.es_oferta === true));
+  if (mode === "novedades") return sorted.sort((a, b) => Number(b.es_novedad === true) - Number(a.es_novedad === true));
+  return sorted.sort((a, b) => new Date(b.created_at ?? 0) - new Date(a.created_at ?? 0));
 }

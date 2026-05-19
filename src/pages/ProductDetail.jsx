@@ -6,7 +6,7 @@ import QuietLoader from "../components/QuietLoader.jsx";
 import { useCart } from "../context/CartContext.jsx";
 import { readDemoProducts } from "../lib/demoStore.js";
 import { hasSupabaseConfig, supabase } from "../lib/supabase.js";
-import { effectivePrice, firstImage, formatCurrency, hasValidOffer } from "../utils/format.js";
+import { effectivePrice, firstImage, formatCurrency, hasValidOffer, productSlug } from "../utils/format.js";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -19,7 +19,9 @@ export default function ProductDetail() {
     async function loadProduct() {
       setLoading(true);
       if (!hasSupabaseConfig) {
-        const found = readDemoProducts().find((item) => item.id === id && item.activo !== false);
+        const found = readDemoProducts().find(
+          (item) => (item.id === id || productSlug(item) === id) && item.activo !== false
+        );
         setProduct(found ?? null);
         setActiveImage(firstImage(found ?? {}));
         setLoading(false);
@@ -29,11 +31,10 @@ export default function ProductDetail() {
       const { data } = await supabase
         .from("productos")
         .select("*")
-        .eq("id", id)
-        .eq("activo", true)
-        .maybeSingle();
-      setProduct(data ?? null);
-      setActiveImage(firstImage(data ?? {}));
+        .eq("activo", true);
+      const found = (data ?? []).find((item) => item.id === id || productSlug(item) === id);
+      setProduct(found ?? null);
+      setActiveImage(firstImage(found ?? {}));
       setLoading(false);
     }
 
@@ -67,9 +68,25 @@ export default function ProductDetail() {
   const originalPrice = Number(product.precio_original ?? 0);
   const price = effectivePrice(product);
   const hasOffer = hasValidOffer(product);
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.nombre,
+    description: product.descripcion,
+    image: images,
+    sku: product.sku,
+    brand: { "@type": "Brand", name: "Nomade Project" },
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "CLP",
+      price,
+      availability: Number(product.stock_quantity ?? 0) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+    }
+  };
 
   return (
     <main className="min-h-screen bg-[#FAF9F6] text-[#252321]">
+      <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       <PageHeader backLabel="Catalogo" />
       <section className="mx-auto grid max-w-7xl gap-12 px-5 py-12 md:px-10 lg:grid-cols-[1.05fr_0.8fr]">
         <div>
@@ -115,7 +132,19 @@ export default function ProductDetail() {
             <Line label="Stock" value={product.stock_quantity} />
             {product.talles && <Line label="Talles" value={product.talles} />}
             {product.medidas && <Line label="Medidas" value={product.medidas} />}
+            {product.sku && <Line label="SKU" value={product.sku} />}
+            {product.material && <Line label="Material" value={product.material} />}
+            {product.origen && <Line label="Origen" value={product.origen} />}
+            {product.color && <Line label="Color" value={product.color} />}
+            {product.peso && <Line label="Peso" value={product.peso} />}
+            {product.tiempo_despacho && <Line label="Despacho" value={product.tiempo_despacho} />}
           </div>
+          {product.cuidados && (
+            <div className="mt-8">
+              <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">Cuidados</p>
+              <p className="mt-3 whitespace-pre-line font-serif text-lg leading-8 text-[#5F5A55]">{product.cuidados}</p>
+            </div>
+          )}
 
           <button
             type="button"

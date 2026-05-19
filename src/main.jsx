@@ -8,6 +8,10 @@ import About from "./pages/About.jsx";
 import Contact from "./pages/Contact.jsx";
 import ProductDetail from "./pages/ProductDetail.jsx";
 import PaymentResult from "./pages/PaymentResult.jsx";
+import Checkout from "./pages/Checkout.jsx";
+import Favorites from "./pages/Favorites.jsx";
+import Search from "./pages/Search.jsx";
+import Policy from "./pages/Policy.jsx";
 import AppErrorBoundary from "./components/AppErrorBoundary.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import "./styles.css";
@@ -35,6 +39,10 @@ try {
             <Routes>
               <Route path="/" element={<App />} />
               <Route path="/producto/:id" element={<ProductDetail />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/buscar" element={<Search />} />
+              <Route path="/favoritos" element={<Favorites />} />
+              <Route path="/politicas/:tipo" element={<Policy />} />
               <Route path="/pago/:status" element={<PaymentResult />} />
               <Route path="/contacto" element={<Contact />} />
               <Route path="/acerca" element={<About />} />

@@ -29,3 +29,16 @@ export function firstImage(product) {
     return "";
   }
 }
+
+export function slugify(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function productSlug(product) {
+  return product?.slug || slugify(product?.nombre) || product?.id;
+}

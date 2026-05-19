@@ -7,6 +7,8 @@ create table if not exists public.categorias (
 create table if not exists public.productos (
   id uuid primary key default gen_random_uuid(),
   nombre text not null,
+  slug text not null default '',
+  sku text not null default '',
   descripcion text not null default '',
   precio_original numeric(12, 2) not null check (precio_original >= 0),
   precio_oferta numeric(12, 2) check (precio_oferta is null or precio_oferta >= 0),
@@ -16,6 +18,13 @@ create table if not exists public.productos (
   es_novedad boolean not null default false,
   talles text not null default '',
   medidas text not null default '',
+  material text not null default '',
+  origen text not null default '',
+  color text not null default '',
+  peso text not null default '',
+  cuidados text not null default '',
+  tiempo_despacho text not null default '',
+  reserved_quantity int4 not null default 0 check (reserved_quantity >= 0),
   imagenes jsonb not null default '[]'::jsonb,
   categoria_id int8 not null references public.categorias(id) on update cascade on delete restrict,
   created_at timestamptz not null default now(),
@@ -36,6 +45,8 @@ create table if not exists public.pedidos (
   id uuid primary key default gen_random_uuid(),
   total numeric(12, 2) not null check (total >= 0),
   subtotal numeric(12, 2) not null default 0 check (subtotal >= 0),
+  discount_code text not null default '',
+  discount_amount numeric(12, 2) not null default 0 check (discount_amount >= 0),
   shipping_cost numeric(12, 2) not null default 0 check (shipping_cost >= 0),
   card_surcharge numeric(12, 2) not null default 0 check (card_surcharge >= 0),
   tax_condition text not null default 'exento',
@@ -50,6 +61,8 @@ create table if not exists public.pedidos (
   payment_status text,
   checkout_url text,
   status_pago text not null default 'pendiente',
+  estado_logistico text not null default 'nuevo',
+  reservation_expires_at timestamptz,
   items jsonb not null default '[]'::jsonb,
   customer_name text,
   customer_company text,
@@ -59,7 +72,39 @@ create table if not exists public.pedidos (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.cupones (
+  codigo text primary key,
+  tipo text not null default 'porcentaje',
+  valor numeric(12, 2) not null default 0 check (valor >= 0),
+  activo boolean not null default true,
+  expires_at timestamptz
+);
+
+create table if not exists public.clientes (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null,
+  empresa text,
+  email text unique,
+  telefono text,
+  rut text,
+  region text,
+  condicion_comercial text,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.audit_log (
+  id uuid primary key default gen_random_uuid(),
+  actor_email text,
+  entidad text not null,
+  entidad_id text,
+  accion text not null,
+  detalle jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
 alter table public.pedidos add column if not exists subtotal numeric(12, 2) not null default 0 check (subtotal >= 0);
+alter table public.pedidos add column if not exists discount_code text not null default '';
+alter table public.pedidos add column if not exists discount_amount numeric(12, 2) not null default 0 check (discount_amount >= 0);
 alter table public.pedidos add column if not exists shipping_cost numeric(12, 2) not null default 0 check (shipping_cost >= 0);
 alter table public.pedidos add column if not exists card_surcharge numeric(12, 2) not null default 0 check (card_surcharge >= 0);
 alter table public.pedidos add column if not exists tax_condition text not null default 'exento';
@@ -73,6 +118,8 @@ alter table public.pedidos add column if not exists payment_preference_id text;
 alter table public.pedidos add column if not exists payment_id text;
 alter table public.pedidos add column if not exists payment_status text;
 alter table public.pedidos add column if not exists checkout_url text;
+alter table public.pedidos add column if not exists estado_logistico text not null default 'nuevo';
+alter table public.pedidos add column if not exists reservation_expires_at timestamptz;
 alter table public.pedidos add column if not exists items jsonb not null default '[]'::jsonb;
 alter table public.pedidos add column if not exists customer_name text;
 alter table public.pedidos add column if not exists customer_company text;
@@ -85,6 +132,15 @@ alter table public.productos add column if not exists es_novedad boolean not nul
 alter table public.categorias add column if not exists activo boolean not null default true;
 alter table public.productos add column if not exists talles text not null default '';
 alter table public.productos add column if not exists medidas text not null default '';
+alter table public.productos add column if not exists slug text not null default '';
+alter table public.productos add column if not exists sku text not null default '';
+alter table public.productos add column if not exists material text not null default '';
+alter table public.productos add column if not exists origen text not null default '';
+alter table public.productos add column if not exists color text not null default '';
+alter table public.productos add column if not exists peso text not null default '';
+alter table public.productos add column if not exists cuidados text not null default '';
+alter table public.productos add column if not exists tiempo_despacho text not null default '';
+alter table public.productos add column if not exists reserved_quantity int4 not null default 0 check (reserved_quantity >= 0);
 
 create or replace function public.is_admin()
 returns boolean
@@ -107,6 +163,9 @@ alter table public.productos enable row level security;
 alter table public.configuracion_sitio enable row level security;
 alter table public.pedidos enable row level security;
 alter table public.admin_users enable row level security;
+alter table public.cupones enable row level security;
+alter table public.clientes enable row level security;
+alter table public.audit_log enable row level security;
 
 drop policy if exists "Admins can read admin users" on public.admin_users;
 create policy "Admins can read admin users"
@@ -147,6 +206,33 @@ drop policy if exists "Admins can write site config" on public.configuracion_sit
 create policy "Admins can write site config"
 on public.configuracion_sitio for all
 using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "Public can read coupons" on public.cupones;
+create policy "Public can read coupons"
+on public.cupones for select
+using (activo = true and (expires_at is null or expires_at > now()));
+
+drop policy if exists "Admins can write coupons" on public.cupones;
+create policy "Admins can write coupons"
+on public.cupones for all
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "Admins can manage clients" on public.clientes;
+create policy "Admins can manage clients"
+on public.clientes for all
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "Admins can read audit log" on public.audit_log;
+create policy "Admins can read audit log"
+on public.audit_log for select
+using (public.is_admin());
+
+drop policy if exists "Admins can write audit log" on public.audit_log;
+create policy "Admins can write audit log"
+on public.audit_log for insert
 with check (public.is_admin());
 
 drop policy if exists "Admins can read orders" on public.pedidos;
@@ -191,8 +277,19 @@ values
   ('about_content', 'Nomade nace como una seleccion de objetos con oficio, materia y pausa. Cada pieza se elige para acompanar proyectos que buscan belleza cotidiana sin exceso.'),
   ('about_image', 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=1200&q=85'),
   ('tax_condition', 'exento'),
-  ('tax_percent', '19')
+  ('tax_percent', '19'),
+  ('status_banner', 'Despachos coordinados dentro de 3 a 5 dias habiles'),
+  ('reservation_minutes', '60'),
+  ('policy_returns', 'Los cambios se coordinan caso a caso dentro de los primeros 10 dias desde la recepcion del pedido.'),
+  ('policy_shipping', 'El retiro en tienda no tiene costo. Los envios a domicilio se cotizan segun region y disponibilidad logistica.'),
+  ('policy_terms', 'Las compras B2B quedan sujetas a disponibilidad de stock, confirmacion de pago y coordinacion de entrega.'),
+  ('policy_privacy', 'Los datos de clientes se utilizan solo para gestionar pedidos, pagos, despachos y comunicaciones comerciales relacionadas.'),
+  ('policy_faq', 'Para pedidos especiales, cotizaciones o dudas sobre medidas, contactanos antes de confirmar la compra.')
 on conflict (clave) do nothing;
+
+insert into public.cupones (codigo, tipo, valor, activo)
+values ('NOMADE10', 'porcentaje', 10, true)
+on conflict (codigo) do nothing;
 
 insert into storage.buckets (id, name, public)
 values ('imagenes-productos', 'imagenes-productos', true),

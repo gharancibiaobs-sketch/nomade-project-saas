@@ -24,13 +24,15 @@ export default async function handler(request, response) {
     }
 
     const preference = {
-      items: order.items.map((item) => ({
-        id: String(item.id),
-        title: item.nombre,
-        quantity: Number(item.quantity),
-        unit_price: Number(item.unit_price),
-        currency_id: "CLP"
-      })),
+      items: [
+        {
+          id: String(orderId),
+          title: "Pedido Nomade Project",
+          quantity: 1,
+          unit_price: Number(order.total),
+          currency_id: "CLP"
+        }
+      ],
       external_reference: String(orderId),
       notification_url: `${siteUrl}/api/mercadopago-webhook`,
       back_urls: {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft, Facebook, Instagram, Mail, MessageCircle } from "lucide-react";
+import { Facebook, Instagram, Mail, MessageCircle } from "lucide-react";
+import PageHeader from "../components/PageHeader.jsx";
 import QuietLoader from "../components/QuietLoader.jsx";
 import { loadBranding } from "../lib/branding.js";
 
@@ -20,16 +20,9 @@ export default function Contact() {
   }
 
   return (
-    <main className="min-h-screen bg-[#FAF9F6] px-5 py-8 text-[#252321] md:px-10">
-      <Link
-        to="/"
-        className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
-      >
-        <ArrowLeft size={15} strokeWidth={1.5} />
-        Volver al catalogo
-      </Link>
-
-      <section className="mx-auto mt-20 max-w-4xl">
+    <main className="min-h-screen bg-[#FAF9F6] text-[#252321]">
+      <PageHeader backLabel="Volver al catalogo" />
+      <section className="mx-auto max-w-4xl px-5 py-16 md:px-10">
         <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">Contacto</p>
         <h1 className="mt-5 font-serif text-5xl leading-tight md:text-7xl">
           {branding.contact_heading}

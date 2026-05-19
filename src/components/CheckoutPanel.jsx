@@ -14,6 +14,8 @@ export default function CheckoutPanel() {
   const [region, setRegion] = useState("metropolitana");
   const [paymentMethod, setPaymentMethod] = useState("transferencia");
   const [paymentOutcome, setPaymentOutcome] = useState("pagado");
+  const [couponCode, setCouponCode] = useState("");
+  const [coupon, setCoupon] = useState(null);
   const [customer, setCustomer] = useState({
     nombre: "",
     empresa: "",
@@ -28,8 +30,9 @@ export default function CheckoutPanel() {
   }, []);
 
   const shippingCost = deliveryMethod === "domicilio" ? getRegionCost(region) : 0;
+  const discountAmount = coupon ? calculateDiscount(totals.amount, coupon) : 0;
   const computed = calculateOrderTotals({
-    subtotal: totals.amount,
+    subtotal: Math.max(totals.amount - discountAmount, 0),
     shippingCost,
     paymentMethod,
     branding
@@ -66,6 +69,8 @@ export default function CheckoutPanel() {
       id: crypto.randomUUID(),
       items: summary,
       subtotal: totals.amount,
+      discount_code: coupon?.codigo ?? "",
+      discount_amount: discountAmount,
       shipping_cost: shippingCost,
       card_surcharge: computed.cardSurcharge,
       tax_condition: branding.tax_condition ?? "exento",
@@ -78,6 +83,11 @@ export default function CheckoutPanel() {
       payment_provider: PAYMENT_MODE === "mercadopago" ? "mercadopago" : "demo",
       payment_status: PAYMENT_MODE === "mercadopago" ? "pending" : paymentOutcome,
       status_pago: PAYMENT_MODE === "mercadopago" ? "pendiente_pago" : paymentOutcome,
+      estado_logistico: "nuevo",
+      reservation_expires_at:
+        paymentOutcome === "pendiente_pago" || PAYMENT_MODE === "mercadopago"
+          ? new Date(Date.now() + Number(branding.reservation_minutes ?? 60) * 60000).toISOString()
+          : null,
       customer_name: customer.nombre.trim(),
       customer_company: customer.empresa.trim(),
       customer_email: customer.email.trim(),
@@ -99,13 +109,26 @@ export default function CheckoutPanel() {
       return;
     }
 
-    const { error } = await supabase.from("pedidos").insert(toOrderInsert(order));
-
-    if (error) {
-      setStatus(error.message);
-    } else {
+    try {
+      const response = await fetch("/api/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order: toOrderInsert(order) })
+      });
+      if (!response.ok) {
+        const payload = await response.json();
+        throw new Error(payload.error ?? "API de pedidos no disponible.");
+      }
       clearCart();
       setStatus(buildDemoStatus(order));
+    } catch {
+      const { error } = await supabase.from("pedidos").insert(toOrderInsert(order));
+      if (error) {
+        setStatus(error.message);
+      } else {
+        clearCart();
+        setStatus(`${buildDemoStatus(order)} Stock pendiente de ajustar por API.`);
+      }
     }
     setIsPaying(false);
   };
@@ -117,18 +140,18 @@ export default function CheckoutPanel() {
       return;
     }
 
-    const { data, error } = await supabase.from("pedidos").insert(toOrderInsert(order)).select("id").single();
-    if (error) {
-      setStatus(error.message);
-      setIsPaying(false);
-      return;
-    }
-
     try {
+      const orderResponse = await fetch("/api/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order: toOrderInsert(order) })
+      });
+      const orderPayload = await orderResponse.json();
+      if (!orderResponse.ok) throw new Error(orderPayload.error ?? "No se pudo registrar el pedido.");
       const response = await fetch("/api/create-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: data.id, order: { ...order, id: data.id } })
+        body: JSON.stringify({ orderId: orderPayload.orderId, order: { ...order, id: orderPayload.orderId } })
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "No se pudo iniciar Mercado Pago.");
@@ -137,6 +160,29 @@ export default function CheckoutPanel() {
       setStatus(error.message);
       setIsPaying(false);
     }
+  };
+
+  const applyCoupon = async () => {
+    const code = couponCode.trim().toUpperCase();
+    if (!code) return;
+    if (!hasSupabaseConfig) {
+      if (code === "NOMADE10") {
+        setCoupon({ codigo: "NOMADE10", tipo: "porcentaje", valor: 10 });
+        setStatus("Cupon aplicado.");
+      } else {
+        setCoupon(null);
+        setStatus("Cupon no encontrado.");
+      }
+      return;
+    }
+    const { data } = await supabase
+      .from("cupones")
+      .select("*")
+      .eq("codigo", code)
+      .eq("activo", true)
+      .maybeSingle();
+    setCoupon(data ?? null);
+    setStatus(data ? "Cupon aplicado." : "Cupon no encontrado.");
   };
 
   return (
@@ -209,7 +255,19 @@ export default function CheckoutPanel() {
       )}
 
       <div className="mt-7 space-y-3 border-t border-[#CCC5BD] pt-5 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+        <div className="grid gap-2">
+          <input
+            value={couponCode}
+            onChange={(event) => setCouponCode(event.target.value)}
+            placeholder="Codigo descuento"
+            className="input text-sm normal-case tracking-normal"
+          />
+          <button type="button" onClick={applyCoupon} className="border border-[#CCC5BD] px-4 py-2 transition hover:border-[#252321]">
+            Aplicar cupon
+          </button>
+        </div>
         <Line label="Subtotal" value={formatCurrency(totals.amount)} />
+        <Line label="Descuento" value={formatCurrency(discountAmount)} />
         <Line label="Envio" value={formatCurrency(shippingCost)} />
         <Line label="Recargo tarjeta" value={formatCurrency(computed.cardSurcharge)} />
         <Line label={`IVA ${Math.round(computed.taxRate * 100)}%`} value={formatCurrency(computed.taxAmount)} />
@@ -271,6 +329,8 @@ function toOrderInsert(order) {
     status_pago: order.status_pago,
     items: order.items,
     subtotal: order.subtotal,
+    discount_code: order.discount_code,
+    discount_amount: order.discount_amount,
     shipping_cost: order.shipping_cost,
     card_surcharge: order.card_surcharge,
     tax_condition: order.tax_condition,
@@ -281,10 +341,18 @@ function toOrderInsert(order) {
     payment_method: order.payment_method,
     payment_provider: order.payment_provider,
     payment_status: order.payment_status,
+    estado_logistico: order.estado_logistico,
+    reservation_expires_at: order.reservation_expires_at,
     customer_name: order.customer_name,
     customer_company: order.customer_company,
     customer_email: order.customer_email,
     customer_address: order.customer_address,
     paid_at: order.paid_at
   };
+}
+
+function calculateDiscount(subtotal, coupon) {
+  if (!coupon) return 0;
+  if (coupon.tipo === "porcentaje") return Math.round(Number(subtotal ?? 0) * (Number(coupon.valor ?? 0) / 100));
+  return Math.min(Number(coupon.valor ?? 0), Number(subtotal ?? 0));
 }
