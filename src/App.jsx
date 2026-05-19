@@ -19,13 +19,13 @@ export default function App() {
   useEffect(() => {
     async function loadShell() {
       if (!hasSupabaseConfig) {
-        setCategorias(readDemoCategories());
+        setCategorias(readDemoCategories().filter((cat) => cat.activo !== false));
         setLogoUrl(readDemoLogo());
         return;
       }
 
       const [{ data: categoryData }, { data: logoData }] = await Promise.all([
-        supabase.from("categorias").select("*").order("nombre"),
+        supabase.from("categorias").select("*").eq("activo", true).order("nombre"),
         supabase.from("configuracion_sitio").select("valor").eq("clave", "logo_url").single()
       ]);
       setCategorias(categoryData ?? []);
@@ -35,7 +35,8 @@ export default function App() {
     loadShell();
 
     const syncDemoLogo = (event) => setLogoUrl(event.detail ?? readDemoLogo());
-    const syncDemoCategories = (event) => setCategorias(event.detail ?? readDemoCategories());
+    const syncDemoCategories = (event) =>
+      setCategorias((event.detail ?? readDemoCategories()).filter((cat) => cat.activo !== false));
     window.addEventListener("nomade-logo-updated", syncDemoLogo);
     window.addEventListener("nomade-categories-updated", syncDemoCategories);
     return () => {

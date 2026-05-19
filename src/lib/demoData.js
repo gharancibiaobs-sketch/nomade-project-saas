@@ -1,7 +1,7 @@
 export const demoCategorias = [
-  { id: 1, nombre: "Objetos" },
-  { id: 2, nombre: "Textiles" },
-  { id: 3, nombre: "Iluminacion" }
+  { id: 1, nombre: "Objetos", activo: true },
+  { id: 2, nombre: "Textiles", activo: true },
+  { id: 3, nombre: "Iluminacion", activo: true }
 ];
 
 export const demoProductos = [

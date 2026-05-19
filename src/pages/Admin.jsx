@@ -63,6 +63,8 @@ export default function Admin() {
     () => productos.find((product) => product.id === selectedId),
     [productos, selectedId]
   );
+  const activeCategories = useMemo(() => categorias.filter((cat) => cat.activo !== false), [categorias]);
+  const inactiveCategories = useMemo(() => categorias.filter((cat) => cat.activo === false), [categorias]);
   const activeProducts = useMemo(() => productos.filter((product) => product.activo !== false), [productos]);
   const inactiveProducts = useMemo(() => productos.filter((product) => product.activo === false), [productos]);
 
@@ -206,9 +208,9 @@ export default function Admin() {
   const validateCategory = () => {
     const categoryId = Number(form.categoria_id);
     const isInteger = Number.isInteger(categoryId);
-    const exists = categorias.some((cat) => cat.id === categoryId);
+    const exists = activeCategories.some((cat) => cat.id === categoryId);
     if (!isInteger || !exists) {
-      setStatus("La categoria seleccionada no existe en la tabla maestra.");
+      setStatus("La categoria seleccionada no existe o esta dada de baja.");
       return null;
     }
     return categoryId;
@@ -226,7 +228,7 @@ export default function Admin() {
 
     if (!hasSupabaseConfig) {
       const nextId = Math.max(0, ...categorias.map((cat) => Number(cat.id))) + 1;
-      const nextCategories = [...categorias, { id: nextId, nombre: name }].sort((a, b) =>
+      const nextCategories = [...categorias, { id: nextId, nombre: name, activo: true }].sort((a, b) =>
         a.nombre.localeCompare(b.nombre)
       );
       setCategorias(nextCategories);
@@ -236,7 +238,7 @@ export default function Admin() {
       return;
     }
 
-    const { data, error } = await supabase.from("categorias").insert({ nombre: name }).select("*").single();
+    const { data, error } = await supabase.from("categorias").insert({ nombre: name, activo: true }).select("*").single();
     if (error) {
       setStatus(error.message);
       return;
@@ -274,6 +276,44 @@ export default function Admin() {
         .sort((a, b) => a.nombre.localeCompare(b.nombre))
     );
     setStatus("Categoria actualizada.");
+  };
+
+  const toggleCategoryStatus = async (categoryId) => {
+    const category = categorias.find((cat) => cat.id === categoryId);
+    if (!category) return;
+    const nextActive = category.activo === false;
+
+    if (!nextActive) {
+      const hasProducts = productos.some((product) => product.categoria_id === categoryId && product.activo !== false);
+      if (hasProducts) {
+        setStatus("No se puede dar de baja una categoria con productos activos asignados.");
+        return;
+      }
+      const confirmed = window.confirm("Dar de baja esta categoria? Dejara de aparecer en el catalogo.");
+      if (!confirmed) return;
+    }
+
+    if (!hasSupabaseConfig) {
+      const nextCategories = categorias
+        .map((cat) => (cat.id === categoryId ? { ...cat, activo: nextActive } : cat))
+        .sort((a, b) => a.nombre.localeCompare(b.nombre));
+      setCategorias(nextCategories);
+      writeDemoCategories(nextCategories);
+      setStatus(nextActive ? "Categoria reactivada en modo demo." : "Categoria dada de baja en modo demo.");
+      return;
+    }
+
+    const { error } = await supabase.from("categorias").update({ activo: nextActive }).eq("id", categoryId);
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
+    setCategorias((current) =>
+      current
+        .map((cat) => (cat.id === categoryId ? { ...cat, activo: nextActive } : cat))
+        .sort((a, b) => a.nombre.localeCompare(b.nombre))
+    );
+    setStatus(nextActive ? "Categoria reactivada." : "Categoria dada de baja.");
   };
 
   const saveProduct = async (event) => {
@@ -604,11 +644,13 @@ export default function Admin() {
           />
           <SalesReport dashboard={salesDashboard} />
           <CategoryManager
-            categorias={categorias}
+            activeCategories={activeCategories}
+            inactiveCategories={inactiveCategories}
             newCategoryName={newCategoryName}
             setNewCategoryName={setNewCategoryName}
             onAddCategory={addCategory}
             onRenameCategory={renameCategory}
+            onToggleCategoryStatus={toggleCategoryStatus}
           />
           </section>
 
@@ -792,7 +834,7 @@ export default function Admin() {
                     onChange={updateForm}
                     className="input"
                   >
-                    {categorias.map((cat) => (
+                    {activeCategories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.id} / {cat.nombre}
                       </option>
@@ -1258,13 +1300,19 @@ function SalesReport({ dashboard }) {
 }
 
 function CategoryManager({
-  categorias,
+  activeCategories,
+  inactiveCategories,
   newCategoryName,
   setNewCategoryName,
   onAddCategory,
-  onRenameCategory
+  onRenameCategory,
+  onToggleCategoryStatus
 }) {
   const [drafts, setDrafts] = useState({});
+  const categorias = useMemo(
+    () => [...activeCategories, ...inactiveCategories],
+    [activeCategories, inactiveCategories]
+  );
 
   useEffect(() => {
     setDrafts(Object.fromEntries(categorias.map((cat) => [cat.id, cat.nombre])));
@@ -1294,9 +1342,42 @@ function CategoryManager({
         </button>
       </form>
 
+      <CategoryListSection
+        title="Categorias activas"
+        categories={activeCategories}
+        drafts={drafts}
+        setDrafts={setDrafts}
+        onRenameCategory={onRenameCategory}
+        onToggleCategoryStatus={onToggleCategoryStatus}
+      />
+      <CategoryListSection
+        title="Categorias dadas de baja"
+        categories={inactiveCategories}
+        drafts={drafts}
+        setDrafts={setDrafts}
+        onRenameCategory={onRenameCategory}
+        onToggleCategoryStatus={onToggleCategoryStatus}
+        inactive
+      />
+    </section>
+  );
+}
+
+function CategoryListSection({
+  title,
+  categories,
+  drafts,
+  setDrafts,
+  onRenameCategory,
+  onToggleCategoryStatus,
+  inactive = false
+}) {
+  return (
+    <div className="mt-5">
+      <p className="mb-3 font-sans text-[8pt] uppercase tracking-[0.16em] text-[#6B655F]">{title}</p>
       <div className="grid gap-3 md:grid-cols-2">
-        {categorias.map((cat) => (
-          <div key={cat.id} className="flex gap-3 border border-[#CCC5BD] p-3">
+        {categories.map((cat) => (
+          <div key={cat.id} className={`flex flex-wrap gap-3 border border-[#CCC5BD] p-3 ${inactive ? "bg-[#F0EEE9]" : ""}`}>
             <div className="flex h-11 w-12 shrink-0 items-center justify-center border border-[#CCC5BD] font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
               {cat.id}
             </div>
@@ -1305,7 +1386,7 @@ function CategoryManager({
               onChange={(event) =>
                 setDrafts((current) => ({ ...current, [cat.id]: event.target.value }))
               }
-              className="input min-w-0 flex-1"
+              className="input min-w-[180px] flex-1"
             />
             <button
               type="button"
@@ -1314,10 +1395,26 @@ function CategoryManager({
             >
               Guardar
             </button>
+            <button
+              type="button"
+              onClick={() => onToggleCategoryStatus(cat.id)}
+              className={`border px-4 font-sans text-[9pt] uppercase tracking-[0.16em] transition ${
+                inactive
+                  ? "border-[#252321] text-[#252321] hover:bg-[#252321] hover:text-[#FAF9F6]"
+                  : "border-[#9A3F35] text-[#7B3028] hover:bg-[#7B3028] hover:text-[#FAF9F6]"
+              }`}
+            >
+              {inactive ? "Reactivar" : "Dar de baja"}
+            </button>
           </div>
         ))}
+        {!categories.length && (
+          <p className="border border-[#CCC5BD] p-4 font-serif text-base leading-6 text-[#5F5A55]">
+            Sin categorias en esta seccion.
+          </p>
+        )}
       </div>
-    </section>
+    </div>
   );
 }
 
