@@ -1,7 +1,7 @@
 import React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ClipboardList, FileText, ImageUp, LogOut, Plus, Save, Trash2, TrendingUp, Upload } from "lucide-react";
+import { ArrowLeft, BookOpen, ClipboardList, FileText, ImageUp, LogOut, Plus, Save, Trash2, TrendingUp, Upload } from "lucide-react";
 import PageHeader from "../components/PageHeader.jsx";
 import QuietLoader from "../components/QuietLoader.jsx";
 import { loadBranding, saveBranding } from "../lib/branding.js";
@@ -776,6 +776,13 @@ export default function Admin() {
             >
               <ClipboardList size={15} strokeWidth={1.5} />
               Pedidos historicos
+            </Link>
+            <Link
+              to="/admin/manual"
+              className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
+            >
+              <BookOpen size={15} strokeWidth={1.5} />
+              Manual de usuario
             </Link>
             {hasSupabaseConfig && (
               <button

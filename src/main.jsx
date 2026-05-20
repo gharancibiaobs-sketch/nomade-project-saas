@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import App from "./App.jsx";
 import Admin from "./pages/Admin.jsx";
+import AdminManual from "./pages/AdminManual.jsx";
 import AdminOrders from "./pages/AdminOrders.jsx";
 import About from "./pages/About.jsx";
 import Contact from "./pages/Contact.jsx";
@@ -47,6 +48,7 @@ try {
               <Route path="/contacto" element={<Contact />} />
               <Route path="/acerca" element={<About />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/manual" element={<AdminManual />} />
               <Route path="/admin/pedidos" element={<AdminOrders />} />
             </Routes>
           </CartProvider>
