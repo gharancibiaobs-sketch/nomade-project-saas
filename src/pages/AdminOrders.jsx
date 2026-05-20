@@ -225,6 +225,13 @@ export default function AdminOrders() {
     setOrders((current) =>
       current.map((order) => (order.id === selectedId ? { ...order, ...payload } : order))
     );
+    await supabase.from("audit_log").insert({
+      actor_email: session?.user?.email ?? "",
+      entidad: "pedido",
+      entidad_id: String(selectedId),
+      accion: "update",
+      detalle: payload
+    });
     setStatus("Pedido actualizado.");
   };
 

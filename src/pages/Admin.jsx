@@ -73,6 +73,9 @@ export default function Admin() {
   const [savedBrandingForm, setSavedBrandingForm] = useState(emptyBranding);
   const [logoUrl, setLogoUrl] = useState("");
   const [salesOrders, setSalesOrders] = useState([]);
+  const [coupons, setCoupons] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [newCoupon, setNewCoupon] = useState({ codigo: "", tipo: "porcentaje", valor: "", activo: true });
   const [salesFrom, setSalesFrom] = useState("");
   const [salesTo, setSalesTo] = useState("");
   const [loading, setLoading] = useState(true);
@@ -147,6 +150,8 @@ export default function Admin() {
         setProductos(demoProductos);
         setSelectedId(demoProductos[0]?.id ?? "");
         setSalesOrders(readDemoOrders().filter((order) => order.status_pago === "pagado"));
+        setCoupons([{ codigo: "NOMADE10", tipo: "porcentaje", valor: 10, activo: true }]);
+        setAuditLogs([]);
         setLogoUrl(readDemoLogo());
         setBrandingForm(branding);
         setSavedBrandingForm(branding);
@@ -158,6 +163,8 @@ export default function Admin() {
         { data: categoryData },
         { data: productData },
         { data: orderData },
+        { data: couponData },
+        { data: auditData },
         { data: logoData },
         branding
       ] =
@@ -170,6 +177,8 @@ export default function Admin() {
               "total, subtotal, shipping_cost, card_surcharge, tax_amount, delivery_method, payment_method, status_pago, items, created_at"
             )
             .eq("status_pago", "pagado"),
+          supabase.from("cupones").select("*").order("codigo"),
+          supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(12),
           supabase.from("configuracion_sitio").select("valor").eq("clave", "logo_url").single(),
           loadBranding()
         ]);
@@ -178,6 +187,8 @@ export default function Admin() {
       setProductos(productData ?? []);
       setSelectedId(productData?.[0]?.id ?? "");
       setSalesOrders(orderData ?? []);
+      setCoupons(couponData ?? []);
+      setAuditLogs(auditData ?? []);
       setLogoUrl(logoData?.valor ?? "");
       setBrandingForm(branding);
       setSavedBrandingForm(branding);
@@ -251,8 +262,24 @@ export default function Admin() {
   const saveBrandingForm = async (event) => {
     event.preventDefault();
     const { error } = await saveBranding(brandingForm);
-    if (!error) setSavedBrandingForm(brandingForm);
+    if (!error) {
+      setSavedBrandingForm(brandingForm);
+      await logAudit("branding", "configuracion_sitio", "update", { keys: Object.keys(brandingForm) });
+    }
     setStatus(error ? error.message : "Branding actualizado.");
+  };
+
+  const logAudit = async (entidad, entidadId, accion, detalle = {}) => {
+    if (!hasSupabaseConfig || !session) return;
+    await supabase.from("audit_log").insert({
+      actor_email: session.user?.email ?? "",
+      entidad,
+      entidad_id: String(entidadId),
+      accion,
+      detalle
+    });
+    const { data } = await supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(12);
+    setAuditLogs(data ?? []);
   };
 
   const filteredSalesOrders = useMemo(
@@ -304,6 +331,7 @@ export default function Admin() {
       return;
     }
     setCategorias((current) => [...current, data].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+    await logAudit("categoria", data.id, "create", { nombre: name });
     setNewCategoryName("");
     setStatus("Categoria creada.");
   };
@@ -335,6 +363,7 @@ export default function Admin() {
         .map((cat) => (cat.id === categoryId ? { ...cat, nombre: name } : cat))
         .sort((a, b) => a.nombre.localeCompare(b.nombre))
     );
+    await logAudit("categoria", categoryId, "update", { nombre: name });
     setStatus("Categoria actualizada.");
   };
 
@@ -373,6 +402,7 @@ export default function Admin() {
         .map((cat) => (cat.id === categoryId ? { ...cat, activo: nextActive } : cat))
         .sort((a, b) => a.nombre.localeCompare(b.nombre))
     );
+    await logAudit("categoria", categoryId, nextActive ? "reactivate" : "deactivate", {});
     setStatus(nextActive ? "Categoria reactivada." : "Categoria dada de baja.");
   };
 
@@ -425,6 +455,7 @@ export default function Admin() {
     setProductos((current) =>
       current.map((product) => (product.id === selectedId ? { ...product, ...payload } : product))
     );
+    await logAudit("producto", selectedId, "update", payload);
     setStatus("Producto actualizado.");
   };
 
@@ -475,6 +506,7 @@ export default function Admin() {
     }
     setProductos((current) => [data, ...current]);
     setSelectedId(data.id);
+    await logAudit("producto", data.id, "create", { nombre: data.nombre });
     setStatus("Producto creado.");
   };
 
@@ -512,6 +544,7 @@ export default function Admin() {
     setProductos((current) =>
       current.map((product) => (product.id === selectedId ? { ...product, activo: nextActive } : product))
     );
+    await logAudit("producto", selectedId, nextActive ? "reactivate" : "deactivate", {});
     setStatus(`Producto ${statusLabel}.`);
   };
 
@@ -620,6 +653,44 @@ export default function Admin() {
     const { error } = await saveBranding(nextBranding);
     if (!error) setSavedBrandingForm(nextBranding);
     setStatus(error ? error.message : "Imagen de Acerca de Nomade actualizada.");
+  };
+
+  const updateNewCoupon = (event) => {
+    const { name, value, type, checked } = event.target;
+    setNewCoupon((current) => ({ ...current, [name]: type === "checkbox" ? checked : value }));
+  };
+
+  const saveCoupon = async (event) => {
+    event.preventDefault();
+    const payload = {
+      codigo: newCoupon.codigo.trim().toUpperCase(),
+      tipo: newCoupon.tipo,
+      valor: Number(newCoupon.valor),
+      activo: newCoupon.activo
+    };
+    if (!payload.codigo || Number.isNaN(payload.valor)) {
+      setStatus("Completa codigo y valor del cupon.");
+      return;
+    }
+    if (!hasSupabaseConfig) {
+      setCoupons((current) => {
+        const without = current.filter((coupon) => coupon.codigo !== payload.codigo);
+        return [...without, payload].sort((a, b) => a.codigo.localeCompare(b.codigo));
+      });
+      setNewCoupon({ codigo: "", tipo: "porcentaje", valor: "", activo: true });
+      setStatus("Cupon guardado en modo demo.");
+      return;
+    }
+    const { error } = await supabase.from("cupones").upsert(payload);
+    if (error) {
+      setStatus(error.message);
+      return;
+    }
+    const { data } = await supabase.from("cupones").select("*").order("codigo");
+    setCoupons(data ?? []);
+    setNewCoupon({ codigo: "", tipo: "porcentaje", valor: "", activo: true });
+    await logAudit("cupon", payload.codigo, "upsert", payload);
+    setStatus("Cupon guardado.");
   };
 
   if (!authReady || loading) {
@@ -740,6 +811,13 @@ export default function Admin() {
             onRenameCategory={renameCategory}
             onToggleCategoryStatus={toggleCategoryStatus}
           />
+          <CouponManager
+            coupons={coupons}
+            newCoupon={newCoupon}
+            updateNewCoupon={updateNewCoupon}
+            saveCoupon={saveCoupon}
+          />
+          <AuditLog logs={auditLogs} />
           </section>
 
           <aside className="space-y-8 border-l border-[#CCC5BD] pl-8">
@@ -1613,6 +1691,69 @@ function CategoryListSection({
         )}
       </div>
     </div>
+  );
+}
+
+function CouponManager({ coupons, newCoupon, updateNewCoupon, saveCoupon }) {
+  return (
+    <section className="border-b border-[#CCC5BD] pb-8">
+      <div className="mb-6">
+        <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+          Cupones y descuentos
+        </p>
+        <h2 className="mt-3 font-serif text-3xl">Codigos comerciales</h2>
+      </div>
+      <form onSubmit={saveCoupon} className="grid gap-3 md:grid-cols-[1fr_160px_140px_auto_auto]">
+        <input name="codigo" value={newCoupon.codigo} onChange={updateNewCoupon} placeholder="NOMADE10" className="input" />
+        <select name="tipo" value={newCoupon.tipo} onChange={updateNewCoupon} className="input">
+          <option value="porcentaje">Porcentaje</option>
+          <option value="monto">Monto fijo</option>
+        </select>
+        <input name="valor" type="number" min="0" value={newCoupon.valor} onChange={updateNewCoupon} placeholder="10" className="input" />
+        <label className="flex items-center gap-2 border border-[#CCC5BD] px-4">
+          <input name="activo" type="checkbox" checked={newCoupon.activo} onChange={updateNewCoupon} className="h-4 w-4 accent-[#252321]" />
+          <span className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">Activo</span>
+        </label>
+        <button type="submit" className="border border-[#252321] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]">
+          Guardar
+        </button>
+      </form>
+      <div className="mt-5 grid gap-3 md:grid-cols-3">
+        {coupons.map((coupon) => (
+          <div key={coupon.codigo} className="border border-[#CCC5BD] p-4">
+            <p className="font-serif text-xl">{coupon.codigo}</p>
+            <p className="mt-2 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+              {coupon.tipo} / {coupon.valor} / {coupon.activo ? "activo" : "inactivo"}
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function AuditLog({ logs }) {
+  return (
+    <section className="border-b border-[#CCC5BD] pb-8">
+      <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
+        Historial de cambios
+      </p>
+      <div className="mt-5 space-y-3">
+        {logs.map((log) => (
+          <div key={log.id} className="border border-[#CCC5BD] p-4">
+            <p className="font-serif text-lg">
+              {log.accion} / {log.entidad}
+            </p>
+            <p className="mt-2 font-sans text-[8pt] uppercase tracking-[0.16em] text-[#6B655F]">
+              {log.actor_email || "sistema"} / {new Date(log.created_at).toLocaleString("es-CL")}
+            </p>
+          </div>
+        ))}
+        {!logs.length && (
+          <p className="font-serif text-lg text-[#5F5A55]">Sin cambios auditados todavia.</p>
+        )}
+      </div>
+    </section>
   );
 }
 
