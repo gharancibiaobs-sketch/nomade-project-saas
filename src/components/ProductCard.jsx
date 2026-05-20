@@ -81,7 +81,7 @@ export default function ProductCard({ product }) {
           title="Agregar"
         >
           <ShoppingBag size={16} strokeWidth={1.5} />
-          Agregar
+          Agregar al carrito
         </button>
       </div>
     </article>
