@@ -42,11 +42,15 @@ export default function ProductCard({ product }) {
         <button
           type="button"
           onClick={() => toggleFavorite(product.id)}
-          className="inline-flex items-center gap-2 font-sans text-[8pt] uppercase tracking-[0.16em] text-[#6B655F] transition hover:text-[#252321]"
+          className={`inline-flex w-full items-center justify-center gap-2 border px-4 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition ${
+            isFavorite(product.id)
+              ? "border-[#252321] bg-[#FAF9F6] text-[#252321]"
+              : "border-[#CCC5BD] bg-white/40 text-[#5F5A55] hover:border-[#252321] hover:text-[#252321]"
+          }`}
           aria-label={isFavorite(product.id) ? `Quitar ${product.nombre} de favoritos` : `Agregar ${product.nombre} a favoritos`}
         >
           <Heart size={15} strokeWidth={1.5} fill={isFavorite(product.id) ? "currentColor" : "none"} />
-          {isFavorite(product.id) ? "Seleccionado" : "Seleccionar"}
+          {isFavorite(product.id) ? "Quitar de favoritos" : "Guardar como favorito"}
         </button>
         <div className="min-w-0">
           <div className="mb-3 flex flex-wrap gap-2 font-sans text-[8pt] uppercase tracking-[0.16em] text-[#6B655F]">
