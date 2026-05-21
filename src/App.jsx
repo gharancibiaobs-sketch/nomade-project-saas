@@ -98,19 +98,19 @@ export default function App() {
     <div className="min-h-screen bg-[#FAF9F6] text-[#252321]">
       <Navbar categorias={categorias} logoUrl={logoUrl} bannerText={branding.status_banner} />
 
-      <main className="mx-auto grid max-w-7xl gap-14 px-5 py-12 md:px-8 lg:grid-cols-[1fr_320px] lg:px-10 lg:py-16">
+      <main className="mx-auto grid max-w-7xl gap-10 px-4 py-8 md:px-8 md:py-12 lg:grid-cols-[1fr_320px] lg:gap-14 lg:px-10 lg:py-16">
         <section>
-          <div className="mb-12 max-w-3xl animate-fadeIn">
+          <div className="mb-8 max-w-3xl animate-fadeIn md:mb-12">
             <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
               Catalogo B2B curado
             </p>
-            <h1 className="mt-5 font-serif text-5xl leading-[1.05] text-[#252321] md:text-7xl">
+            <h1 className="mt-4 font-serif text-4xl leading-[1.05] text-[#252321] sm:text-5xl md:mt-5 md:text-7xl">
               {activeCategoryName}
             </h1>
             <p className="mt-7 max-w-2xl font-serif text-xl leading-9 text-[#5F5A55]">
             </p>
           </div>
-          <div className="mb-10 max-w-xs">
+          <div className="mb-8 grid gap-3 sm:max-w-xs md:mb-10">
             <label className="block">
               <span className="mb-2 block font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
                 Ordenar catalogo
@@ -128,7 +128,7 @@ export default function App() {
           {loading ? (
             <QuietLoader label="Afinando seleccion" />
           ) : (
-            <div className="grid animate-fadeIn grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid animate-fadeIn grid-cols-2 gap-x-3 gap-y-9 sm:gap-x-6 sm:gap-y-12 md:gap-x-8 md:gap-y-14 xl:grid-cols-3">
               {productos.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -136,7 +136,7 @@ export default function App() {
           )}
         </section>
 
-        <aside className="h-fit border-l border-[#CCC5BD] pl-8 lg:sticky lg:top-40">
+        <aside className="hidden h-fit border-l border-[#CCC5BD] pl-8 lg:sticky lg:top-40 lg:block">
           <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Pedido en curso
           </p>
