@@ -37,7 +37,7 @@ export default function PaymentResult() {
         <p className="mt-8 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
           {content.eyebrow}
         </p>
-        <h1 className="mt-5 font-serif text-5xl leading-tight">{content.title}</h1>
+        <h1 className="mt-5 font-serif text-3xl leading-tight md:text-5xl">{content.title}</h1>
         <p className="mt-6 font-serif text-xl leading-9 text-[#5F5A55]">{content.text}</p>
         <Link
           to="/"

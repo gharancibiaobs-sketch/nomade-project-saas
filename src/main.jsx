@@ -48,6 +48,7 @@ try {
               <Route path="/contacto" element={<Contact />} />
               <Route path="/acerca" element={<About />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/:section" element={<Admin />} />
               <Route path="/admin/manual" element={<AdminManual />} />
               <Route path="/admin/pedidos" element={<AdminOrders />} />
             </Routes>

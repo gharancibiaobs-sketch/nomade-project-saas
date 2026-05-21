@@ -27,20 +27,20 @@ export default function PageHeader({ backLabel = "Volver al catalogo", backTo = 
 
   return (
     <header className="border-b border-[#CCC5BD] bg-[#FAF9F6]">
-      <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-6 md:px-8 lg:px-10">
-        <div className="flex flex-wrap items-center justify-between gap-5">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 md:px-8 md:py-6 lg:px-10">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <Link to="/" className="flex items-center">
             {logoUrl ? (
               <img
                 src={logoUrl}
                 alt="Nomade Project"
-                className="h-auto max-h-20 max-w-[64vw] object-contain md:max-h-24 md:max-w-[520px]"
+                className="h-auto max-h-16 max-w-[64vw] object-contain md:max-h-24 md:max-w-[520px]"
               />
             ) : (
-              <span className="font-serif text-4xl text-[#252321]">Nomade Project</span>
+              <span className="font-serif text-3xl text-[#252321] md:text-4xl">Nomade Project</span>
             )}
           </Link>
-          {title && <h1 className="font-serif text-3xl text-[#252321]">{title}</h1>}
+          {title && <h1 className="font-serif text-2xl text-[#252321] md:text-3xl">{title}</h1>}
         </div>
 
         <Link

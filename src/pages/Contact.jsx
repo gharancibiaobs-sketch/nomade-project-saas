@@ -22,9 +22,9 @@ export default function Contact() {
   return (
     <main className="min-h-screen bg-[#FAF9F6] text-[#252321]">
       <PageHeader backLabel="Volver al catalogo" />
-      <section className="mx-auto max-w-4xl px-5 py-16 md:px-10">
+      <section className="mx-auto max-w-4xl px-4 py-10 md:px-10 md:py-16">
         <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">Contacto</p>
-        <h1 className="mt-5 font-serif text-5xl leading-tight md:text-7xl">
+        <h1 className="mt-5 font-serif text-4xl leading-tight md:text-6xl">
           {branding.contact_heading}
         </h1>
 

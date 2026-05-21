@@ -11,7 +11,7 @@ export default function Checkout() {
   return (
     <main className="min-h-screen bg-[#FAF9F6] text-[#252321]">
       <PageHeader backLabel="Volver al catalogo" title="Checkout" />
-      <section className="mx-auto grid max-w-6xl gap-12 px-5 py-12 md:px-10 lg:grid-cols-[1fr_420px]">
+      <section className="mx-auto grid max-w-6xl gap-8 px-4 py-8 md:px-10 md:py-12 lg:grid-cols-[1fr_420px]">
         <div>
           <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Resumen del pedido
@@ -60,7 +60,7 @@ export default function Checkout() {
           </div>
         </div>
 
-        <aside className="h-fit border-l border-[#CCC5BD] pl-8">
+        <aside className="h-fit border-t border-[#CCC5BD] pt-8 lg:border-l lg:border-t-0 lg:pl-8 lg:pt-0">
           <CheckoutPanel />
         </aside>
       </section>

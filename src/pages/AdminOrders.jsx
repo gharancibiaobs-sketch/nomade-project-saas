@@ -277,7 +277,7 @@ export default function AdminOrders() {
           <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Acceso admin
           </p>
-          <h1 className="mt-5 font-serif text-5xl leading-tight">Pedidos historicos</h1>
+          <h1 className="mt-5 font-serif text-3xl leading-tight md:text-5xl">Pedidos historicos</h1>
           <form onSubmit={signInAdmin} className="mt-8 space-y-5">
             <Field label="Email">
               <input
@@ -326,7 +326,7 @@ export default function AdminOrders() {
         </div>
       )}
 
-      <main className="mx-auto grid max-w-7xl gap-10 px-5 py-10 md:px-8 lg:grid-cols-[360px_minmax(0,1fr)] lg:px-10">
+      <main className="mx-auto grid max-w-7xl gap-8 px-4 py-8 md:px-8 md:py-10 lg:grid-cols-[360px_minmax(0,1fr)] lg:px-10">
         <aside>
           <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Seleccionar pedido
@@ -370,7 +370,7 @@ export default function AdminOrders() {
               <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
                 Pedido {String(selectedOrder.id).slice(0, 8)}
               </p>
-              <h2 className="mt-3 font-serif text-4xl">{formatCurrency(selectedOrder.total)}</h2>
+              <h2 className="mt-3 font-serif text-3xl md:text-4xl">{formatCurrency(selectedOrder.total)}</h2>
               <p className="mt-3 font-serif text-lg leading-7 text-[#5F5A55]">
                 {formatDate(selectedOrder.created_at)}
               </p>

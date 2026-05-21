@@ -21,7 +21,7 @@ export default function About() {
   return (
     <main className="min-h-screen bg-[#FAF9F6] text-[#252321]">
       <PageHeader backLabel="Volver al catalogo" />
-      <section className="mx-auto grid max-w-6xl gap-12 px-5 py-14 md:px-10 lg:grid-cols-[0.95fr_1fr] lg:items-center">
+      <section className="mx-auto grid max-w-6xl gap-8 px-4 py-8 md:px-10 md:py-14 lg:grid-cols-[0.95fr_1fr] lg:items-center">
         <div className="group overflow-hidden bg-[#F0EEE9]">
           <img
             src={branding.about_image}
@@ -33,7 +33,7 @@ export default function About() {
           <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Acerca de Nomade
           </p>
-          <h1 className="mt-5 font-serif text-5xl leading-tight md:text-7xl">
+          <h1 className="mt-5 font-serif text-4xl leading-tight md:text-6xl">
             {branding.about_title}
           </h1>
           <p className="mt-8 whitespace-pre-line font-serif text-xl leading-9 text-[#5F5A55]">

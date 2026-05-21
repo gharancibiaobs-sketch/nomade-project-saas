@@ -1,10 +1,11 @@
 import React from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft, BookOpen, ClipboardList, FileText, ImageUp, LogOut, Plus, Save, Trash2, TrendingUp, Upload } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import { ArrowLeft, BookOpen, ClipboardList, FileText, ImageUp, LogOut, MapPinned, Palette, Percent, Plus, Save, Tags, Trash2, TrendingUp, Upload } from "lucide-react";
 import PageHeader from "../components/PageHeader.jsx";
 import QuietLoader from "../components/QuietLoader.jsx";
 import { loadBranding, saveBranding } from "../lib/branding.js";
+import { shippingRegions } from "../lib/commerce.js";
 import {
   fileToDataUrl,
   readDemoCategories,
@@ -60,7 +61,19 @@ const emptyBranding = {
   policy_faq: ""
 };
 
+const adminSections = [
+  { id: "finanzas", title: "Integridad financiera", eyebrow: "Dashboard de ventas", icon: TrendingUp },
+  { id: "ventas-producto", title: "Ventas por producto", eyebrow: "Reporte exportable", icon: FileText },
+  { id: "categorias", title: "Maestro de Categorias", eyebrow: "Catalogo", icon: Tags },
+  { id: "productos", title: "Maestro de Productos", eyebrow: "Catalogo", icon: ClipboardList },
+  { id: "branding", title: "Branding", eyebrow: "Identidad y politicas", icon: Palette },
+  { id: "regiones", title: "Maestro de Regiones", eyebrow: "Costos de envio", icon: MapPinned },
+  { id: "acerca", title: "Acerca de Nomade", eyebrow: "Historia editorial", icon: BookOpen },
+  { id: "codigos", title: "Codigos Comerciales", eyebrow: "Cupones", icon: Percent }
+];
+
 export default function Admin() {
+  const { section = "" } = useParams();
   const [session, setSession] = useState(null);
   const [authReady, setAuthReady] = useState(!hasSupabaseConfig);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
@@ -116,6 +129,7 @@ export default function Admin() {
     () => JSON.stringify(brandingForm) !== JSON.stringify(savedBrandingForm),
     [brandingForm, savedBrandingForm]
   );
+  const activeSection = adminSections.some((item) => item.id === section) ? section : "";
 
   useEffect(() => {
     if (!hasSupabaseConfig) return;
@@ -705,11 +719,11 @@ export default function Admin() {
     return (
       <div className="min-h-screen bg-[#FAF9F6] text-[#252321]">
         <PageHeader backLabel="Catalogo" title="Backoffice Nomade" />
-        <main className="mx-auto max-w-md px-5 py-16 md:px-10">
+        <main className="mx-auto max-w-md px-4 py-12 md:px-10 md:py-16">
           <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Acceso admin
           </p>
-          <h1 className="mt-4 font-serif text-5xl">Backoffice Nomade</h1>
+          <h1 className="mt-4 font-serif text-4xl md:text-5xl">Backoffice Nomade</h1>
           <form onSubmit={signInAdmin} className="mt-8 space-y-4">
             <Field label="Email">
               <input
@@ -747,7 +761,7 @@ export default function Admin() {
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-[#252321]">
       <header className="border-b border-[#CCC5BD]">
-        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-6 md:px-8 lg:px-10">
+        <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-5 md:px-8 md:py-6 lg:px-10">
           <div className="flex flex-wrap items-center justify-between gap-5">
             <Link to="/" className="flex items-center">
               {logoUrl ? (
@@ -760,9 +774,9 @@ export default function Admin() {
                 <span className="font-serif text-4xl text-[#252321]">Nomade Project</span>
               )}
             </Link>
-            <h1 className="font-serif text-3xl">Backoffice Nomade</h1>
+            <h1 className="font-serif text-3xl md:text-4xl">Backoffice Nomade</h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
             <Link
               to="/"
               className="inline-flex items-center gap-3 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] hover:text-[#252321]"
@@ -798,424 +812,41 @@ export default function Admin() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl space-y-12 px-5 py-10 md:px-8 lg:px-10">
-        <div className="grid gap-10 lg:grid-cols-[1.5fr_0.8fr]">
-          <section className="space-y-8">
-          <SalesDashboard
-            dashboard={salesDashboard}
-            salesFrom={salesFrom}
-            salesTo={salesTo}
-            setSalesFrom={setSalesFrom}
-            setSalesTo={setSalesTo}
-          />
-          <SalesReport dashboard={salesDashboard} />
-          <CategoryManager
-            activeCategories={activeCategories}
-            inactiveCategories={inactiveCategories}
-            newCategoryName={newCategoryName}
-            setNewCategoryName={setNewCategoryName}
-            onAddCategory={addCategory}
-            onRenameCategory={renameCategory}
-            onToggleCategoryStatus={toggleCategoryStatus}
-          />
-          <CouponManager
-            coupons={coupons}
-            newCoupon={newCoupon}
-            updateNewCoupon={updateNewCoupon}
-            saveCoupon={saveCoupon}
-          />
-          <AuditLog logs={auditLogs} />
-          </section>
+      <main className="mx-auto max-w-7xl space-y-8 px-4 py-8 md:px-8 lg:px-10">
+        <AdminSectionNav activeSection={activeSection} />
 
-          <aside className="space-y-8 border-l border-[#CCC5BD] pl-8">
-          <section>
-            <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
-              Branding
-            </p>
-            <div className="mt-5 flex min-h-24 items-center justify-center border border-[#CCC5BD] p-6">
-              {logoUrl ? (
-                <img
-                  src={logoUrl}
-                  alt="Logo Nomade"
-                  className="h-auto max-h-32 max-w-full object-contain"
-                />
-              ) : (
-                <span className="font-serif text-2xl">Nomade Project</span>
-              )}
-            </div>
-            <label className="mt-5 flex cursor-pointer items-center justify-center gap-3 border border-[#CCC5BD] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:border-[#252321]">
-              <Upload size={15} strokeWidth={1.5} />
-              Cambiar logo
-              <input type="file" accept="image/*" onChange={uploadLogo} className="hidden" />
-            </label>
+        {!activeSection && <AdminHome />}
 
-            <form onSubmit={saveBrandingForm} className="mt-8 space-y-4 border-t border-[#CCC5BD] pt-8">
-              <Field label="Texto contacto">
-                <input
-                  name="contact_heading"
-                  value={brandingForm.contact_heading}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <Field label="Whatsapp">
-                <input
-                  name="contact_whatsapp"
-                  value={brandingForm.contact_whatsapp}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <Field label="Mail">
-                <input
-                  name="contact_mail"
-                  value={brandingForm.contact_mail}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <Field label="Texto redes">
-                <input
-                  name="social_heading"
-                  value={brandingForm.social_heading}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <Field label="Instagram">
-                <input
-                  name="social_instagram"
-                  value={brandingForm.social_instagram}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <Field label="Facebook">
-                <input
-                  name="social_facebook"
-                  value={brandingForm.social_facebook}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <Field label="Titulo acerca">
-                <input
-                  name="about_title"
-                  value={brandingForm.about_title}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <Field label="Contenido acerca">
-                <textarea
-                  name="about_content"
-                  value={brandingForm.about_content}
-                  onChange={updateBrandingForm}
-                  rows="6"
-                  className="input resize-none leading-7"
-                />
-              </Field>
-              <Field label="Condicion IVA">
-                <select
-                  name="tax_condition"
-                  value={brandingForm.tax_condition}
-                  onChange={updateBrandingForm}
-                  className="input"
-                >
-                  <option value="exento">Exento / no aplica IVA</option>
-                  <option value="responsable_inscripto">Afecto IVA / responsable</option>
-                </select>
-              </Field>
-              <Field label="Porcentaje IVA">
-                <input
-                  name="tax_percent"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={brandingForm.tax_percent}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <Field label="Banner operativo">
-                <input
-                  name="status_banner"
-                  value={brandingForm.status_banner}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <Field label="Minutos reserva stock">
-                <input
-                  name="reservation_minutes"
-                  type="number"
-                  min="15"
-                  value={brandingForm.reservation_minutes}
-                  onChange={updateBrandingForm}
-                  className="input"
-                />
-              </Field>
-              <Field label="Cambios y devoluciones">
-                <textarea name="policy_returns" value={brandingForm.policy_returns} onChange={updateBrandingForm} rows="4" className="input resize-none leading-7" />
-              </Field>
-              <Field label="Despacho y retiro">
-                <textarea name="policy_shipping" value={brandingForm.policy_shipping} onChange={updateBrandingForm} rows="4" className="input resize-none leading-7" />
-              </Field>
-              <Field label="Terminos y condiciones">
-                <textarea name="policy_terms" value={brandingForm.policy_terms} onChange={updateBrandingForm} rows="4" className="input resize-none leading-7" />
-              </Field>
-              <Field label="Politica de privacidad">
-                <textarea name="policy_privacy" value={brandingForm.policy_privacy} onChange={updateBrandingForm} rows="4" className="input resize-none leading-7" />
-              </Field>
-              <Field label="Preguntas frecuentes">
-                <textarea name="policy_faq" value={brandingForm.policy_faq} onChange={updateBrandingForm} rows="4" className="input resize-none leading-7" />
-              </Field>
-              <div>
-                <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
-                  Imagen acerca
-                </p>
-                <div className="mt-2 overflow-hidden border border-[#CCC5BD] bg-[#F0EEE9]">
-                  {brandingForm.about_image ? (
-                    <img
-                      src={brandingForm.about_image}
-                      alt="Imagen Acerca de Nomade"
-                      className="aspect-[4/3] w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex aspect-[4/3] items-center justify-center px-6 text-center font-serif text-lg leading-7 text-[#6B655F]">
-                      Sube una imagen para la pagina Acerca de Nomade.
-                    </div>
-                  )}
-                </div>
-              </div>
-              <label className="flex cursor-pointer items-center justify-center gap-3 border border-[#CCC5BD] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:border-[#252321]">
-                <ImageUp size={15} strokeWidth={1.5} />
-                Subir imagen acerca
-                <input type="file" accept="image/*" onChange={uploadAboutImage} className="hidden" />
-              </label>
-              <button
-                type="submit"
-                className={saveButtonClass(brandingDirty, "inline-flex w-full items-center justify-center gap-3")}
-              >
-                <Save size={15} strokeWidth={1.5} />
-                Guardar branding
-              </button>
-            </form>
-          </section>
-          </aside>
-        </div>
+        {activeSection === "finanzas" && (
+          <SalesDashboard dashboard={salesDashboard} salesFrom={salesFrom} salesTo={salesTo} setSalesFrom={setSalesFrom} setSalesTo={setSalesTo} />
+        )}
 
-        <section className="border-t border-[#CCC5BD] pt-10">
-          <div className="grid gap-8 xl:grid-cols-[280px_minmax(0,1fr)_360px]">
-            <div>
-              <div className="mb-4 flex items-center justify-between gap-4">
-                <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
-                  Productos
-                </p>
-                <button
-                  type="button"
-                  onClick={createProduct}
-                  className="inline-flex items-center gap-2 border border-[#252321] px-3 py-2 font-sans text-[8pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
-                >
-                  <Plus size={13} strokeWidth={1.5} />
-                  Nuevo
-                </button>
-              </div>
-              <div className="quiet-scrollbar max-h-[560px] space-y-5 overflow-auto pr-2">
-                <ProductListSection title="Activos" products={activeProducts} selectedId={selectedId} setSelectedId={setSelectedId} />
-                <ProductListSection title="Dados de baja" products={inactiveProducts} selectedId={selectedId} setSelectedId={setSelectedId} inactive />
-              </div>
-            </div>
+        {activeSection === "ventas-producto" && <SalesReport dashboard={salesDashboard} />}
 
-            {selectedProduct ? (
-            <form onSubmit={saveProduct} className="animate-fadeIn space-y-6">
-              <div className="grid gap-5 md:grid-cols-2">
-                <Field label="Nombre">
-                  <input name="nombre" value={form.nombre} onChange={updateForm} className="input" />
-                </Field>
-                <Field label="Categoria">
-                  <select
-                    name="categoria_id"
-                    value={form.categoria_id}
-                    onChange={updateForm}
-                    className="input"
-                  >
-                    {activeCategories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.id} / {cat.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Precio original">
-                  <input
-                    name="precio_original"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.precio_original}
-                    onChange={updateForm}
-                    className="input"
-                  />
-                </Field>
-                <Field label="Precio oferta">
-                  <input
-                    name="precio_oferta"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.precio_oferta ?? ""}
-                    onChange={updateForm}
-                    className="input"
-                  />
-                </Field>
-                <Field label="Stock">
-                  <input
-                    name="stock_quantity"
-                    type="number"
-                    min="0"
-                    value={form.stock_quantity}
-                    onChange={updateForm}
-                    className="input"
-                  />
-                </Field>
-                <Field label="Talles">
-                  <input
-                    name="talles"
-                    value={form.talles}
-                    onChange={updateForm}
-                    placeholder="XS/S/M/L/XL"
-                    className="input"
-                  />
-                </Field>
-                <Field label="Medidas">
-                  <input
-                    name="medidas"
-                    value={form.medidas}
-                    onChange={updateForm}
-                    placeholder="XX x XX cm"
-                    className="input"
-                  />
-                </Field>
-                <Field label="URL limpia">
-                  <input name="slug" value={form.slug} onChange={updateForm} placeholder="banano-color-naranja" className="input" />
-                </Field>
-                <Field label="SKU">
-                  <input name="sku" value={form.sku} onChange={updateForm} className="input" />
-                </Field>
-                <Field label="Material">
-                  <input name="material" value={form.material} onChange={updateForm} className="input" />
-                </Field>
-                <Field label="Origen">
-                  <input name="origen" value={form.origen} onChange={updateForm} className="input" />
-                </Field>
-                <Field label="Color">
-                  <input name="color" value={form.color} onChange={updateForm} className="input" />
-                </Field>
-                <Field label="Peso">
-                  <input name="peso" value={form.peso} onChange={updateForm} placeholder="1.2 kg" className="input" />
-                </Field>
-                <Field label="Tiempo despacho">
-                  <input name="tiempo_despacho" value={form.tiempo_despacho} onChange={updateForm} placeholder="3 a 5 dias habiles" className="input" />
-                </Field>
-                <label className="flex items-center gap-3 border border-[#CCC5BD] px-4 py-3">
-                  <input
-                    name="es_oferta"
-                    type="checkbox"
-                    checked={form.es_oferta}
-                    onChange={updateForm}
-                    className="h-4 w-4 accent-[#252321]"
-                  />
-                  <span className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
-                    Marcar como oferta
-                  </span>
-                </label>
-                <label className="flex items-center gap-3 border border-[#CCC5BD] px-4 py-3">
-                  <input
-                    name="es_novedad"
-                    type="checkbox"
-                    checked={form.es_novedad}
-                    onChange={updateForm}
-                    className="h-4 w-4 accent-[#252321]"
-                  />
-                  <span className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
-                    Marcar como novedad
-                  </span>
-                </label>
-              </div>
+        {activeSection === "categorias" && (
+          <CategoryManager activeCategories={activeCategories} inactiveCategories={inactiveCategories} newCategoryName={newCategoryName} setNewCategoryName={setNewCategoryName} onAddCategory={addCategory} onRenameCategory={renameCategory} onToggleCategoryStatus={toggleCategoryStatus} />
+        )}
 
-              <Field label="Descripcion tecnica">
-                <textarea
-                  name="descripcion"
-                  value={form.descripcion}
-                  onChange={updateForm}
-                  rows="7"
-                  className="input resize-none leading-7"
-                />
-              </Field>
-              <Field label="Cuidados">
-                <textarea
-                  name="cuidados"
-                  value={form.cuidados}
-                  onChange={updateForm}
-                  rows="4"
-                  className="input resize-none leading-7"
-                />
-              </Field>
+        {activeSection === "productos" && (
+          <ProductMaster activeProducts={activeProducts} inactiveProducts={inactiveProducts} selectedId={selectedId} setSelectedId={setSelectedId} selectedProduct={selectedProduct} form={form} updateForm={updateForm} activeCategories={activeCategories} saveProduct={saveProduct} productDirty={productDirty} toggleProductStatus={toggleProductStatus} createProduct={createProduct} uploadProductImage={uploadProductImage} />
+        )}
 
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="submit"
-                  className={saveButtonClass(productDirty, "inline-flex items-center gap-3")}
-                >
-                  <Save size={15} strokeWidth={1.5} />
-                  Guardar producto
-                </button>
-                <button
-                  type="button"
-                  onClick={toggleProductStatus}
-                  className={`inline-flex items-center gap-3 border px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition ${
-                    selectedProduct.activo === false
-                      ? "border-[#252321] text-[#252321] hover:bg-[#252321] hover:text-[#FAF9F6]"
-                      : "border-[#9A3F35] text-[#7B3028] hover:bg-[#7B3028] hover:text-[#FAF9F6]"
-                  }`}
-                >
-                  <Trash2 size={15} strokeWidth={1.5} />
-                  {selectedProduct.activo === false ? "Reactivar producto" : "Dar de baja"}
-                </button>
-              </div>
-            </form>
-            ) : (
-              <div className="border border-[#CCC5BD] p-8">
-                <p className="font-serif text-xl leading-8 text-[#5F5A55]">
-                  Crea un producto nuevo para habilitar el editor.
-                </p>
-              </div>
-            )}
+        {activeSection === "branding" && (
+          <BrandingSection logoUrl={logoUrl} uploadLogo={uploadLogo} brandingForm={brandingForm} updateBrandingForm={updateBrandingForm} saveBrandingForm={saveBrandingForm} brandingDirty={brandingDirty} />
+        )}
 
-            <section className="border-l border-[#CCC5BD] pl-6">
-              <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
-                Medios de producto
-              </p>
-              <div className="mt-5 overflow-hidden bg-[#F0EEE9]">
-                {selectedProduct ? (
-                  <img
-                    src={firstImage(selectedProduct)}
-                    alt={selectedProduct.nombre}
-                    className="aspect-[4/5] w-full object-cover"
-                  />
-                ) : (
-                  <div className="aspect-[4/5] w-full border border-[#CCC5BD]" />
-                )}
-              </div>
-              <label className="mt-5 flex cursor-pointer items-center justify-center gap-3 border border-[#CCC5BD] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:border-[#252321]">
-                <ImageUp size={15} strokeWidth={1.5} />
-                Subir imagen
-                <input type="file" accept="image/*" onChange={uploadProductImage} className="hidden" />
-              </label>
-            </section>
+        {activeSection === "regiones" && <ShippingRegionsSection />}
+
+        {activeSection === "acerca" && (
+          <AboutBrandingSection brandingForm={brandingForm} updateBrandingForm={updateBrandingForm} saveBrandingForm={saveBrandingForm} uploadAboutImage={uploadAboutImage} brandingDirty={brandingDirty} />
+        )}
+
+        {activeSection === "codigos" && (
+          <div className="space-y-8">
+            <CouponManager coupons={coupons} newCoupon={newCoupon} updateNewCoupon={updateNewCoupon} saveCoupon={saveCoupon} />
+            <AuditLog logs={auditLogs} />
           </div>
-        </section>
+        )}
         {status && (
           <p className="animate-fadeIn border-t border-[#CCC5BD] pt-6 font-serif text-lg leading-7 text-[#5F5A55]">
             {status}
@@ -1223,6 +854,282 @@ export default function Admin() {
         )}
       </main>
     </div>
+  );
+}
+
+function AdminSectionNav({ activeSection }) {
+  return (
+    <nav className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Secciones de administracion">
+      {adminSections.map(({ id, title, eyebrow, icon: Icon }) => (
+        <Link
+          key={id}
+          to={`/admin/${id}`}
+          className={`border p-4 transition ${
+            activeSection === id
+              ? "border-[#252321] bg-[#252321] text-[#FAF9F6]"
+              : "border-[#CCC5BD] bg-white/30 text-[#252321] hover:border-[#252321]"
+          }`}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className={`font-sans text-[8pt] uppercase tracking-[0.16em] ${activeSection === id ? "text-[#FAF9F6]/75" : "text-[#6B655F]"}`}>
+                {eyebrow}
+              </p>
+              <p className="mt-2 font-serif text-xl leading-tight">{title}</p>
+            </div>
+            <Icon size={18} strokeWidth={1.5} />
+          </div>
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+function AdminHome() {
+  return (
+    <section className="border border-[#CCC5BD] bg-white/30 p-5 md:p-8">
+      <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">Backoffice Nomade</p>
+      <h2 className="mt-3 font-serif text-3xl leading-tight md:text-4xl">Selecciona un modulo para administrar</h2>
+      <p className="mt-4 max-w-3xl font-serif text-lg leading-8 text-[#5F5A55]">
+        El backoffice ahora esta separado por paginas para que sea mas claro en celulares y mas rapido de operar en escritorio.
+      </p>
+    </section>
+  );
+}
+
+function ProductMaster({
+  activeProducts,
+  inactiveProducts,
+  selectedId,
+  setSelectedId,
+  selectedProduct,
+  form,
+  updateForm,
+  activeCategories,
+  saveProduct,
+  productDirty,
+  toggleProductStatus,
+  createProduct,
+  uploadProductImage
+}) {
+  return (
+    <section className="border-t border-[#CCC5BD] pt-8">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <SectionTitle eyebrow="Catalogo" title="Maestro de Productos" />
+        <button
+          type="button"
+          onClick={createProduct}
+          className="inline-flex items-center gap-2 border border-[#252321] px-4 py-3 font-sans text-[8pt] uppercase tracking-[0.16em] transition hover:bg-[#252321] hover:text-[#FAF9F6]"
+        >
+          <Plus size={13} strokeWidth={1.5} />
+          Nuevo
+        </button>
+      </div>
+
+      <div className="grid gap-8 xl:grid-cols-[300px_minmax(0,1fr)_320px]">
+        <div>
+          <div className="quiet-scrollbar max-h-[520px] space-y-5 overflow-auto pr-2">
+            <ProductListSection title="Activos" products={activeProducts} selectedId={selectedId} setSelectedId={setSelectedId} />
+            <ProductListSection title="Dados de baja" products={inactiveProducts} selectedId={selectedId} setSelectedId={setSelectedId} inactive />
+          </div>
+        </div>
+
+        {selectedProduct ? (
+          <ProductEditorForm selectedProduct={selectedProduct} form={form} updateForm={updateForm} activeCategories={activeCategories} saveProduct={saveProduct} productDirty={productDirty} toggleProductStatus={toggleProductStatus} />
+        ) : (
+          <div className="border border-[#CCC5BD] p-6">
+            <p className="font-serif text-xl leading-8 text-[#5F5A55]">Crea un producto nuevo para habilitar el editor.</p>
+          </div>
+        )}
+
+        <section className="border-t border-[#CCC5BD] pt-6 xl:border-l xl:border-t-0 xl:pl-6 xl:pt-0">
+          <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">Medios de producto</p>
+          <div className="mt-5 max-w-sm overflow-hidden bg-[#F0EEE9] xl:max-w-none">
+            {selectedProduct ? (
+              <img src={firstImage(selectedProduct)} alt={selectedProduct.nombre} className="aspect-[4/5] w-full object-cover" />
+            ) : (
+              <div className="aspect-[4/5] w-full border border-[#CCC5BD]" />
+            )}
+          </div>
+          <label className="mt-5 flex cursor-pointer items-center justify-center gap-3 border border-[#CCC5BD] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:border-[#252321]">
+            <ImageUp size={15} strokeWidth={1.5} />
+            Subir imagen
+            <input type="file" accept="image/*" onChange={uploadProductImage} className="hidden" />
+          </label>
+        </section>
+      </div>
+    </section>
+  );
+}
+
+function ProductEditorForm({ selectedProduct, form, updateForm, activeCategories, saveProduct, productDirty, toggleProductStatus }) {
+  return (
+    <form onSubmit={saveProduct} className="animate-fadeIn space-y-6">
+      <div className="grid gap-5 md:grid-cols-2">
+        <Field label="Nombre"><input name="nombre" value={form.nombre} onChange={updateForm} className="input" /></Field>
+        <Field label="Categoria">
+          <select name="categoria_id" value={form.categoria_id} onChange={updateForm} className="input">
+            {activeCategories.map((cat) => (
+              <option key={cat.id} value={cat.id}>{cat.id} / {cat.nombre}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Precio original"><input name="precio_original" type="number" min="0" step="0.01" value={form.precio_original} onChange={updateForm} className="input" /></Field>
+        <Field label="Precio oferta"><input name="precio_oferta" type="number" min="0" step="0.01" value={form.precio_oferta ?? ""} onChange={updateForm} className="input" /></Field>
+        <Field label="Stock"><input name="stock_quantity" type="number" min="0" value={form.stock_quantity} onChange={updateForm} className="input" /></Field>
+        <Field label="Talles"><input name="talles" value={form.talles} onChange={updateForm} placeholder="XS/S/M/L/XL" className="input" /></Field>
+        <Field label="Medidas"><input name="medidas" value={form.medidas} onChange={updateForm} placeholder="XX x XX cm" className="input" /></Field>
+        <Field label="URL limpia"><input name="slug" value={form.slug} onChange={updateForm} placeholder="banano-color-naranja" className="input" /></Field>
+        <Field label="SKU"><input name="sku" value={form.sku} onChange={updateForm} className="input" /></Field>
+        <Field label="Material"><input name="material" value={form.material} onChange={updateForm} className="input" /></Field>
+        <Field label="Origen"><input name="origen" value={form.origen} onChange={updateForm} className="input" /></Field>
+        <Field label="Color"><input name="color" value={form.color} onChange={updateForm} className="input" /></Field>
+        <Field label="Peso"><input name="peso" value={form.peso} onChange={updateForm} placeholder="1.2 kg" className="input" /></Field>
+        <Field label="Tiempo despacho"><input name="tiempo_despacho" value={form.tiempo_despacho} onChange={updateForm} placeholder="3 a 5 dias habiles" className="input" /></Field>
+        <ToggleField name="es_oferta" checked={form.es_oferta} onChange={updateForm} label="Marcar como oferta" />
+        <ToggleField name="es_novedad" checked={form.es_novedad} onChange={updateForm} label="Marcar como novedad" />
+      </div>
+
+      <Field label="Descripcion tecnica"><textarea name="descripcion" value={form.descripcion} onChange={updateForm} rows="7" className="input resize-none leading-7" /></Field>
+      <Field label="Cuidados"><textarea name="cuidados" value={form.cuidados} onChange={updateForm} rows="4" className="input resize-none leading-7" /></Field>
+
+      <div className="flex flex-wrap gap-3">
+        <button type="submit" className={saveButtonClass(productDirty, "inline-flex items-center gap-3")}>
+          <Save size={15} strokeWidth={1.5} />
+          Guardar producto
+        </button>
+        <button
+          type="button"
+          onClick={toggleProductStatus}
+          className={`inline-flex items-center gap-3 border px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition ${
+            selectedProduct.activo === false
+              ? "border-[#252321] text-[#252321] hover:bg-[#252321] hover:text-[#FAF9F6]"
+              : "border-[#9A3F35] text-[#7B3028] hover:bg-[#7B3028] hover:text-[#FAF9F6]"
+          }`}
+        >
+          <Trash2 size={15} strokeWidth={1.5} />
+          {selectedProduct.activo === false ? "Reactivar producto" : "Dar de baja"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function BrandingSection({ logoUrl, uploadLogo, brandingForm, updateBrandingForm, saveBrandingForm, brandingDirty }) {
+  return (
+    <section className="border-t border-[#CCC5BD] pt-8">
+      <SectionTitle eyebrow="Identidad y politicas" title="Branding" />
+      <div className="mt-6 grid gap-8 lg:grid-cols-[360px_minmax(0,1fr)]">
+        <div>
+          <div className="flex min-h-28 items-center justify-center border border-[#CCC5BD] p-5">
+            {logoUrl ? <img src={logoUrl} alt="Logo Nomade" className="h-auto max-h-32 max-w-full object-contain" /> : <span className="font-serif text-2xl">Nomade Project</span>}
+          </div>
+          <label className="mt-5 flex cursor-pointer items-center justify-center gap-3 border border-[#CCC5BD] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:border-[#252321]">
+            <Upload size={15} strokeWidth={1.5} />
+            Cambiar logo
+            <input type="file" accept="image/*" onChange={uploadLogo} className="hidden" />
+          </label>
+        </div>
+        <form onSubmit={saveBrandingForm} className="grid gap-5 md:grid-cols-2">
+          <Field label="Texto contacto"><input name="contact_heading" value={brandingForm.contact_heading} onChange={updateBrandingForm} className="input" /></Field>
+          <Field label="Whatsapp"><input name="contact_whatsapp" value={brandingForm.contact_whatsapp} onChange={updateBrandingForm} className="input" /></Field>
+          <Field label="Mail"><input name="contact_mail" value={brandingForm.contact_mail} onChange={updateBrandingForm} className="input" /></Field>
+          <Field label="Texto redes"><input name="social_heading" value={brandingForm.social_heading} onChange={updateBrandingForm} className="input" /></Field>
+          <Field label="Instagram"><input name="social_instagram" value={brandingForm.social_instagram} onChange={updateBrandingForm} className="input" /></Field>
+          <Field label="Facebook"><input name="social_facebook" value={brandingForm.social_facebook} onChange={updateBrandingForm} className="input" /></Field>
+          <Field label="Condicion IVA">
+            <select name="tax_condition" value={brandingForm.tax_condition} onChange={updateBrandingForm} className="input">
+              <option value="exento">Exento / no aplica IVA</option>
+              <option value="responsable_inscripto">Afecto IVA / responsable</option>
+            </select>
+          </Field>
+          <Field label="Porcentaje IVA"><input name="tax_percent" type="number" min="0" step="0.01" value={brandingForm.tax_percent} onChange={updateBrandingForm} className="input" /></Field>
+          <Field label="Banner operativo"><input name="status_banner" value={brandingForm.status_banner} onChange={updateBrandingForm} className="input" /></Field>
+          <Field label="Minutos reserva stock"><input name="reservation_minutes" type="number" min="15" value={brandingForm.reservation_minutes} onChange={updateBrandingForm} className="input" /></Field>
+          <Field label="Cambios y devoluciones"><textarea name="policy_returns" value={brandingForm.policy_returns} onChange={updateBrandingForm} rows="4" className="input resize-none leading-7" /></Field>
+          <Field label="Despacho y retiro"><textarea name="policy_shipping" value={brandingForm.policy_shipping} onChange={updateBrandingForm} rows="4" className="input resize-none leading-7" /></Field>
+          <Field label="Terminos y condiciones"><textarea name="policy_terms" value={brandingForm.policy_terms} onChange={updateBrandingForm} rows="4" className="input resize-none leading-7" /></Field>
+          <Field label="Politica de privacidad"><textarea name="policy_privacy" value={brandingForm.policy_privacy} onChange={updateBrandingForm} rows="4" className="input resize-none leading-7" /></Field>
+          <Field label="Preguntas frecuentes"><textarea name="policy_faq" value={brandingForm.policy_faq} onChange={updateBrandingForm} rows="4" className="input resize-none leading-7" /></Field>
+          <button type="submit" className={saveButtonClass(brandingDirty, "inline-flex items-center justify-center gap-3 self-end")}>
+            <Save size={15} strokeWidth={1.5} />
+            Guardar branding
+          </button>
+        </form>
+      </div>
+    </section>
+  );
+}
+
+function AboutBrandingSection({ brandingForm, updateBrandingForm, saveBrandingForm, uploadAboutImage, brandingDirty }) {
+  return (
+    <section className="border-t border-[#CCC5BD] pt-8">
+      <SectionTitle eyebrow="Historia editorial" title="Acerca de Nomade" />
+      <form onSubmit={saveBrandingForm} className="mt-6 grid gap-8 lg:grid-cols-[360px_minmax(0,1fr)]">
+        <div>
+          <div className="overflow-hidden border border-[#CCC5BD] bg-[#F0EEE9]">
+            {brandingForm.about_image ? (
+              <img src={brandingForm.about_image} alt="Imagen Acerca de Nomade" className="aspect-[4/3] w-full object-cover" />
+            ) : (
+              <div className="flex aspect-[4/3] items-center justify-center px-6 text-center font-serif text-lg leading-7 text-[#6B655F]">Sube una imagen para la pagina Acerca de Nomade.</div>
+            )}
+          </div>
+          <label className="mt-5 flex cursor-pointer items-center justify-center gap-3 border border-[#CCC5BD] px-5 py-3 font-sans text-[9pt] uppercase tracking-[0.16em] transition hover:border-[#252321]">
+            <ImageUp size={15} strokeWidth={1.5} />
+            Subir imagen acerca
+            <input type="file" accept="image/*" onChange={uploadAboutImage} className="hidden" />
+          </label>
+        </div>
+        <div className="space-y-5">
+          <Field label="Titulo acerca"><input name="about_title" value={brandingForm.about_title} onChange={updateBrandingForm} className="input" /></Field>
+          <Field label="Contenido acerca"><textarea name="about_content" value={brandingForm.about_content} onChange={updateBrandingForm} rows="10" className="input resize-none leading-7" /></Field>
+          <button type="submit" className={saveButtonClass(brandingDirty, "inline-flex items-center justify-center gap-3")}>
+            <Save size={15} strokeWidth={1.5} />
+            Guardar Acerca
+          </button>
+        </div>
+      </form>
+    </section>
+  );
+}
+
+function ShippingRegionsSection() {
+  return (
+    <section className="border-t border-[#CCC5BD] pt-8">
+      <SectionTitle eyebrow="Costos de envio" title="Maestro de Regiones" />
+      <div className="mt-6 grid gap-4 md:grid-cols-2">
+        {shippingRegions.map((region) => (
+          <div key={region.id} className="flex items-center justify-between gap-4 border border-[#CCC5BD] bg-white/30 p-5">
+            <div>
+              <p className="font-serif text-xl">{region.nombre}</p>
+              <p className="mt-1 font-sans text-[8pt] uppercase tracking-[0.14em] text-[#6B655F]">{region.id}</p>
+            </div>
+            <strong className="font-serif text-2xl">{formatCurrency(region.costo)}</strong>
+          </div>
+        ))}
+      </div>
+      <p className="mt-6 max-w-3xl font-serif text-lg leading-8 text-[#5F5A55]">
+        Estos valores se usan en el checkout. En esta version se administran desde la configuracion tecnica de comercio; la edicion directa desde Admin queda preparada como mejora de base de datos.
+      </p>
+    </section>
+  );
+}
+
+function SectionTitle({ eyebrow, title }) {
+  return (
+    <div>
+      <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">{eyebrow}</p>
+      <h2 className="mt-3 font-serif text-3xl leading-tight md:text-4xl">{title}</h2>
+    </div>
+  );
+}
+
+function ToggleField({ name, checked, onChange, label }) {
+  return (
+    <label className="flex items-center gap-3 border border-[#CCC5BD] px-4 py-3">
+      <input name={name} type="checkbox" checked={checked} onChange={onChange} className="h-4 w-4 accent-[#252321]" />
+      <span className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">{label}</span>
+    </label>
   );
 }
 
@@ -1415,7 +1322,7 @@ function SalesDashboard({ dashboard, salesFrom, salesTo, setSalesFrom, setSalesT
           <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Dashboard de ventas
           </p>
-          <h2 className="mt-3 font-serif text-4xl">Integridad financiera</h2>
+          <h2 className="mt-3 font-serif text-3xl leading-tight md:text-4xl">Integridad financiera</h2>
         </div>
         <TrendingUp size={22} strokeWidth={1.4} className="text-[#6B655F]" />
       </div>
@@ -1477,7 +1384,7 @@ function SalesDashboard({ dashboard, salesFrom, salesTo, setSalesFrom, setSalesT
           </div>
         </div>
 
-        <div className="border-l border-[#CCC5BD] pl-6">
+        <div className="border-t border-[#CCC5BD] pt-6 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
           <p className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
             Auditoria operativa
           </p>

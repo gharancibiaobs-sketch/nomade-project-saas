@@ -73,10 +73,10 @@ export default function AdminManual() {
     <main className="min-h-screen bg-[#FAF9F6] text-[#252321]">
       <PageHeader backLabel="Volver a Admin" backTo="/admin" title="Manual de Usuario" />
 
-      <section className="mx-auto max-w-7xl px-5 py-10 md:px-8 lg:px-10">
+      <section className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-10 lg:px-10">
         <div className="border border-[#CCC5BD] bg-white/45 p-6 md:p-10">
           <p className="font-sans text-[9pt] uppercase tracking-[0.18em] text-[#6B655F]">Manual operativo</p>
-          <h1 className="mt-4 max-w-4xl font-serif text-5xl leading-tight md:text-6xl">
+          <h1 className="mt-4 max-w-4xl font-serif text-4xl leading-tight md:text-5xl">
             Aplicacion SaaS NOMADE
           </h1>
           <p className="mt-6 max-w-3xl font-serif text-xl leading-8 text-[#5F5A55]">
@@ -232,7 +232,7 @@ function ManualSection({ eyebrow, title, status, intro, children }) {
       <div className="mb-7 flex flex-wrap items-start justify-between gap-5">
         <div>
           <p className="font-sans text-[9pt] uppercase tracking-[0.18em] text-[#6B655F]">{eyebrow}</p>
-          <h2 className="mt-3 font-serif text-4xl leading-tight">{title}</h2>
+          <h2 className="mt-3 font-serif text-3xl leading-tight md:text-4xl">{title}</h2>
           {intro && <p className="mt-4 max-w-3xl font-serif text-lg leading-8 text-[#5F5A55]">{intro}</p>}
         </div>
         <StatusBadge status={status} />

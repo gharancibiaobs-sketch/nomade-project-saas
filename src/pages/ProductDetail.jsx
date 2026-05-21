@@ -56,7 +56,7 @@ export default function ProductDetail() {
       <main className="min-h-screen bg-[#FAF9F6] text-[#252321]">
         <PageHeader backLabel="Catalogo" />
         <section className="mx-auto max-w-2xl px-5 py-20 md:px-10">
-          <h1 className="font-serif text-5xl">Producto no disponible</h1>
+          <h1 className="font-serif text-3xl md:text-4xl">Producto no disponible</h1>
           <p className="mt-5 font-serif text-xl leading-8 text-[#5F5A55]">
             Este producto no esta publicado actualmente.
           </p>
@@ -88,7 +88,7 @@ export default function ProductDetail() {
     <main className="min-h-screen bg-[#FAF9F6] text-[#252321]">
       <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       <PageHeader backLabel="Catalogo" />
-      <section className="mx-auto grid max-w-7xl gap-12 px-5 py-12 md:px-10 lg:grid-cols-[1.05fr_0.8fr]">
+      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-8 md:px-10 md:py-12 lg:grid-cols-[1.05fr_0.8fr]">
         <div>
           <div className="overflow-hidden bg-[#F0EEE9]">
             <img
@@ -123,7 +123,7 @@ export default function ProductDetail() {
             {product.es_oferta === true && <span>En oferta</span>}
             {product.es_novedad === true && <span>Novedad</span>}
           </div>
-          <h1 className="mt-5 font-serif text-5xl leading-tight">{product.nombre}</h1>
+          <h1 className="mt-5 font-serif text-3xl leading-tight md:text-5xl">{product.nombre}</h1>
           <p className="mt-6 font-serif text-xl leading-9 text-[#5F5A55]">{product.descripcion}</p>
 
           <div className="mt-8 space-y-3 border-y border-[#CCC5BD] py-6 font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F]">
