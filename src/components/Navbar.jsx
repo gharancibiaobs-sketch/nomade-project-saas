@@ -159,6 +159,12 @@ export default function Navbar({ categorias, logoUrl, bannerText }) {
             >
               Terminos
             </Link>
+            <Link
+              to="/admin"
+              className="font-sans text-[9pt] uppercase tracking-[0.16em] text-[#6B655F] transition hover:text-[#252321] md:hidden"
+            >
+              Admin
+            </Link>
           </div>
         </div>
       </div>
