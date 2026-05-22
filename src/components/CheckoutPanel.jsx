@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CreditCard, MapPin, PackageCheck, Truck } from "lucide-react";
 import { useCart } from "../context/CartContext.jsx";
-import { calculateOrderTotals, getRegionCost, PAYMENT_MODE, paymentOutcomes, shippingRegions } from "../lib/commerce.js";
+import { calculateOrderTotals, getRegionCost, PAYMENT_MODE, paymentOutcomes } from "../lib/commerce.js";
 import { loadBranding } from "../lib/branding.js";
+import { loadShippingSettings } from "../lib/shipping.js";
 import { appendDemoOrder } from "../lib/demoStore.js";
 import { hasSupabaseConfig, supabase } from "../lib/supabase.js";
 import { effectivePrice, formatCurrency } from "../utils/format.js";
@@ -10,6 +11,7 @@ import { effectivePrice, formatCurrency } from "../utils/format.js";
 export default function CheckoutPanel() {
   const { cart, totals, clearCart } = useCart();
   const [branding, setBranding] = useState({ tax_condition: "exento", tax_percent: "19" });
+  const [shippingRegions, setShippingRegions] = useState([]);
   const [deliveryMethod, setDeliveryMethod] = useState("retiro");
   const [region, setRegion] = useState("metropolitana");
   const [paymentMethod, setPaymentMethod] = useState("transferencia");
@@ -27,9 +29,13 @@ export default function CheckoutPanel() {
 
   useEffect(() => {
     loadBranding().then((value) => setBranding(value));
+    loadShippingSettings().then((settings) => {
+      setShippingRegions(settings.regions);
+      setRegion(settings.regions[0]?.id ?? "metropolitana");
+    });
   }, []);
 
-  const shippingCost = deliveryMethod === "domicilio" ? getRegionCost(region) : 0;
+  const shippingCost = deliveryMethod === "domicilio" ? getRegionCost(region, shippingRegions) : 0;
   const discountAmount = coupon ? calculateDiscount(totals.amount, coupon) : 0;
   const computed = calculateOrderTotals({
     subtotal: Math.max(totals.amount - discountAmount, 0),
@@ -203,7 +209,7 @@ export default function CheckoutPanel() {
           active={deliveryMethod === "domicilio"}
           icon={<Truck size={16} strokeWidth={1.5} />}
           label="Envio a domicilio"
-          detail={`Costo segun region desde ${formatCurrency(shippingRegions[0].costo)}`}
+          detail={`Costo segun region desde ${formatCurrency(shippingRegions[0]?.costo ?? 0)}`}
           onClick={() => setDeliveryMethod("domicilio")}
         />
       </div>

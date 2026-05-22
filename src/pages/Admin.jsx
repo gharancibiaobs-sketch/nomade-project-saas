@@ -5,7 +5,7 @@ import { ArrowLeft, BookOpen, ClipboardList, FileText, ImageUp, LogOut, MapPinne
 import PageHeader from "../components/PageHeader.jsx";
 import QuietLoader from "../components/QuietLoader.jsx";
 import { loadBranding, saveBranding } from "../lib/branding.js";
-import { shippingRegions } from "../lib/commerce.js";
+import { loadShippingSettings, saveShippingSettings } from "../lib/shipping.js";
 import {
   fileToDataUrl,
   readDemoCategories,
@@ -84,6 +84,8 @@ export default function Admin() {
   const [form, setForm] = useState(emptyForm);
   const [brandingForm, setBrandingForm] = useState(emptyBranding);
   const [savedBrandingForm, setSavedBrandingForm] = useState(emptyBranding);
+  const [shippingForm, setShippingForm] = useState({ regions: [], notes: "" });
+  const [savedShippingForm, setSavedShippingForm] = useState({ regions: [], notes: "" });
   const [logoUrl, setLogoUrl] = useState("");
   const [salesOrders, setSalesOrders] = useState([]);
   const [coupons, setCoupons] = useState([]);
@@ -129,6 +131,10 @@ export default function Admin() {
     () => JSON.stringify(brandingForm) !== JSON.stringify(savedBrandingForm),
     [brandingForm, savedBrandingForm]
   );
+  const shippingDirty = useMemo(
+    () => JSON.stringify(shippingForm) !== JSON.stringify(savedShippingForm),
+    [shippingForm, savedShippingForm]
+  );
   const activeSection = adminSections.some((item) => item.id === section) ? section : "";
 
   useEffect(() => {
@@ -160,6 +166,7 @@ export default function Admin() {
       if (!hasSupabaseConfig) {
         const demoProductos = readDemoProducts();
         const branding = await loadBranding();
+        const shipping = await loadShippingSettings();
         setCategorias(readDemoCategories());
         setProductos(demoProductos);
         setSelectedId(demoProductos[0]?.id ?? "");
@@ -169,6 +176,8 @@ export default function Admin() {
         setLogoUrl(readDemoLogo());
         setBrandingForm(branding);
         setSavedBrandingForm(branding);
+        setShippingForm(shipping);
+        setSavedShippingForm(shipping);
         setLoading(false);
         return;
       }
@@ -180,7 +189,8 @@ export default function Admin() {
         { data: couponData },
         { data: auditData },
         { data: logoData },
-        branding
+        branding,
+        shipping
       ] =
         await Promise.all([
           supabase.from("categorias").select("*").order("nombre"),
@@ -194,7 +204,8 @@ export default function Admin() {
           supabase.from("cupones").select("*").order("codigo"),
           supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(12),
           supabase.from("configuracion_sitio").select("valor").eq("clave", "logo_url").single(),
-          loadBranding()
+          loadBranding(),
+          loadShippingSettings()
         ]);
 
       setCategorias(categoryData ?? []);
@@ -206,6 +217,8 @@ export default function Admin() {
       setLogoUrl(logoData?.valor ?? "");
       setBrandingForm(branding);
       setSavedBrandingForm(branding);
+      setShippingForm(shipping);
+      setSavedShippingForm(shipping);
       setLoading(false);
     }
 
@@ -271,6 +284,34 @@ export default function Admin() {
   const updateBrandingForm = (event) => {
     const { name, value } = event.target;
     setBrandingForm((current) => ({ ...current, [name]: value }));
+  };
+
+  const updateShippingRegion = (regionId, field, value) => {
+    setShippingForm((current) => ({
+      ...current,
+      regions: current.regions.map((region) =>
+        region.id === regionId
+          ? { ...region, [field]: field === "costo" ? Math.max(0, Number(value || 0)) : value }
+          : region
+      )
+    }));
+  };
+
+  const updateShippingNotes = (event) => {
+    setShippingForm((current) => ({ ...current, notes: event.target.value }));
+  };
+
+  const saveShippingForm = async (event) => {
+    event.preventDefault();
+    const { error } = await saveShippingSettings(shippingForm);
+    if (!error) {
+      setSavedShippingForm(shippingForm);
+      await logAudit("regiones", "shipping_regions", "update", {
+        regiones: shippingForm.regions.length,
+        observaciones: Boolean(shippingForm.notes)
+      });
+    }
+    setStatus(error ? error.message : "Regiones y costos de envio actualizados.");
   };
 
   const saveBrandingForm = async (event) => {
@@ -835,7 +876,15 @@ export default function Admin() {
           <BrandingSection logoUrl={logoUrl} uploadLogo={uploadLogo} brandingForm={brandingForm} updateBrandingForm={updateBrandingForm} saveBrandingForm={saveBrandingForm} brandingDirty={brandingDirty} />
         )}
 
-        {activeSection === "regiones" && <ShippingRegionsSection />}
+        {activeSection === "regiones" && (
+          <ShippingRegionsSection
+            shippingForm={shippingForm}
+            updateShippingRegion={updateShippingRegion}
+            updateShippingNotes={updateShippingNotes}
+            saveShippingForm={saveShippingForm}
+            shippingDirty={shippingDirty}
+          />
+        )}
 
         {activeSection === "acerca" && (
           <AboutBrandingSection brandingForm={brandingForm} updateBrandingForm={updateBrandingForm} saveBrandingForm={saveBrandingForm} uploadAboutImage={uploadAboutImage} brandingDirty={brandingDirty} />
@@ -1093,24 +1142,56 @@ function AboutBrandingSection({ brandingForm, updateBrandingForm, saveBrandingFo
   );
 }
 
-function ShippingRegionsSection() {
+function ShippingRegionsSection({ shippingForm, updateShippingRegion, updateShippingNotes, saveShippingForm, shippingDirty }) {
   return (
     <section className="border-t border-[#CCC5BD] pt-8">
       <SectionTitle eyebrow="Costos de envio" title="Maestro de Regiones" />
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        {shippingRegions.map((region) => (
-          <div key={region.id} className="flex items-center justify-between gap-4 border border-[#CCC5BD] bg-white/30 p-5">
-            <div>
-              <p className="font-serif text-xl">{region.nombre}</p>
-              <p className="mt-1 font-sans text-[8pt] uppercase tracking-[0.14em] text-[#6B655F]">{region.id}</p>
+      <form onSubmit={saveShippingForm} className="mt-6 space-y-6">
+        <div className="grid gap-4 md:grid-cols-2">
+          {shippingForm.regions.map((region) => (
+            <div key={region.id} className="border border-[#CCC5BD] bg-white/30 p-5">
+              <p className="font-sans text-[8pt] uppercase tracking-[0.14em] text-[#6B655F]">{region.id}</p>
+              <div className="mt-4 grid gap-4">
+                <Field label="Region">
+                  <input
+                    value={region.nombre}
+                    onChange={(event) => updateShippingRegion(region.id, "nombre", event.target.value)}
+                    className="input"
+                  />
+                </Field>
+                <Field label="Costo de envio">
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={region.costo}
+                    onChange={(event) => updateShippingRegion(region.id, "costo", event.target.value)}
+                    className="input"
+                  />
+                </Field>
+              </div>
+              <p className="mt-4 font-serif text-lg text-[#5F5A55]">
+                Valor actual: <span className="text-[#252321]">{formatCurrency(region.costo)}</span>
+              </p>
             </div>
-            <strong className="font-serif text-2xl">{formatCurrency(region.costo)}</strong>
-          </div>
-        ))}
-      </div>
-      <p className="mt-6 max-w-3xl font-serif text-lg leading-8 text-[#5F5A55]">
-        Estos valores se usan en el checkout. En esta version se administran desde la configuracion tecnica de comercio; la edicion directa desde Admin queda preparada como mejora de base de datos.
-      </p>
+          ))}
+        </div>
+
+        <Field label="Observaciones internas para administradores">
+          <textarea
+            value={shippingForm.notes}
+            onChange={updateShippingNotes}
+            rows="5"
+            className="input resize-none leading-7"
+            placeholder="Ej: confirmar cobertura rural antes de aceptar el despacho, validar tarifas especiales por volumen, etc."
+          />
+        </Field>
+
+        <button type="submit" className={saveButtonClass(shippingDirty, "inline-flex items-center justify-center gap-3")}>
+          <Save size={15} strokeWidth={1.5} />
+          Guardar regiones
+        </button>
+      </form>
     </section>
   );
 }

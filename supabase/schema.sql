@@ -280,6 +280,8 @@ values
   ('tax_percent', '19'),
   ('status_banner', 'Despachos coordinados dentro de 3 a 5 dias habiles'),
   ('reservation_minutes', '60'),
+  ('shipping_regions', '[{"id":"metropolitana","nombre":"Region Metropolitana","costo":6000},{"id":"valparaiso","nombre":"Region de Valparaiso","costo":9000},{"id":"ohiggins","nombre":"Region de O''Higgins","costo":9500},{"id":"maule","nombre":"Region del Maule","costo":11000},{"id":"biobio","nombre":"Region del Biobio","costo":13000},{"id":"araucania","nombre":"Region de La Araucania","costo":14000},{"id":"los_lagos","nombre":"Region de Los Lagos","costo":16000},{"id":"otras","nombre":"Otras regiones","costo":18000}]'),
+  ('shipping_admin_notes', 'Revisar cobertura, tiempos y costos antes de confirmar despachos especiales.'),
   ('policy_returns', 'Los cambios se coordinan caso a caso dentro de los primeros 10 dias desde la recepcion del pedido.'),
   ('policy_shipping', 'El retiro en tienda no tiene costo. Los envios a domicilio se cotizan segun region y disponibilidad logistica.'),
   ('policy_terms', 'Las compras B2B quedan sujetas a disponibilidad de stock, confirmacion de pago y coordinacion de entrega.'),

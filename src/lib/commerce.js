@@ -1,7 +1,7 @@
 export const PAYMENT_MODE = import.meta.env.VITE_PAYMENT_MODE ?? "demo";
 export const CREDIT_CARD_SURCHARGE_RATE = 0.02;
 
-export const shippingRegions = [
+export const defaultShippingRegions = [
   { id: "metropolitana", nombre: "Region Metropolitana", costo: 6000 },
   { id: "valparaiso", nombre: "Region de Valparaiso", costo: 9000 },
   { id: "ohiggins", nombre: "Region de O'Higgins", costo: 9500 },
@@ -12,14 +12,16 @@ export const shippingRegions = [
   { id: "otras", nombre: "Otras regiones", costo: 18000 }
 ];
 
+export const shippingRegions = defaultShippingRegions;
+
 export const paymentOutcomes = [
   { id: "pagado", nombre: "Simular aprobado" },
   { id: "pendiente_pago", nombre: "Simular pendiente" },
   { id: "rechazado", nombre: "Simular rechazado" }
 ];
 
-export function getRegionCost(regionId) {
-  return shippingRegions.find((region) => region.id === regionId)?.costo ?? 0;
+export function getRegionCost(regionId, regions = defaultShippingRegions) {
+  return regions.find((region) => region.id === regionId)?.costo ?? 0;
 }
 
 export function shouldApplyTax(branding) {
